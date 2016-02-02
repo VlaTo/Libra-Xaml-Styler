@@ -1,4 +1,7 @@
-﻿namespace LibraProgramming.Xaml.Parsing.Core
+﻿using System;
+using System.Collections.ObjectModel;
+
+namespace LibraProgramming.Xaml.Parsing.Core
 {
     internal class SourceXamlParser
     {
@@ -22,20 +25,74 @@
 
                 if (XamlTerminal.OpenAngleBracket == term)
                 {
-                    ParseNodeName();
+                    ParseNode();
+                }
+
+                if (XamlTerminal.EOF == term)
+                {
+                    break;
                 }
             }
         }
 
-        private void ParseNodeName()
+        private XamlTerminal ParseNode()
         {
-            string name;
+            var term = ParseNodeName();
 
-            var term = tokenizer.GetAlphaNumericString(out name);
-
-            if (XamlTerminal.Colon == term)
+            if (XamlTerminal.Whitespace == term)
             {
-                
+                term = ParseNodeName();
+            }
+
+            while (true)
+            {
+                if (XamlTerminal.Whitespace == term)
+                {
+                    term = ParseNodeName();
+                }
+                else if(XamlTerminal.)
+                {
+                    
+                }
+            }
+
+        }
+
+        private XamlTerminal ParseNodeName()
+        {
+            string @namespace = null;
+            var names = new Collection<string>();
+
+            while (true)
+            {
+                string str;
+
+                var term = tokenizer.GetAlphaNumericString(out str);
+
+                switch (term)
+                {
+                    case XamlTerminal.Colon:
+                        if (null == @namespace && 0 < str.Length)
+                        {
+                            @namespace = str;
+                            continue;
+                        }
+
+                        throw new Exception();
+
+                    case XamlTerminal.Dot:
+                        names.Add(str);
+                        break;
+
+                    case XamlTerminal.Whitespace:
+                    case XamlTerminal.Equal:
+                    case XamlTerminal.Slash:
+                    case XamlTerminal.CloseAngleBracket:
+                        return term;
+
+                    default:
+                        throw new Exception();
+                }
             }
         }
     }
