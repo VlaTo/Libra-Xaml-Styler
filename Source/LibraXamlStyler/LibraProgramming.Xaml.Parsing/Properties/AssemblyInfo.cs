@@ -5,12 +5,12 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("LibraProgramming.VisualStudio.XamlStyler")]
+[assembly: AssemblyTitle("LibraProgramming.Xaml.Parsing")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("LibraProgramming.VisualStudio.XamlStyler")]
-[assembly: AssemblyCopyright("")]
+[assembly: AssemblyProduct("LibraProgramming.Xaml.Parsing")]
+[assembly: AssemblyCopyright("Copyright ©  2016")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
@@ -18,6 +18,9 @@ using System.Runtime.InteropServices;
 // to COM components.  If you need to access a type in this assembly from 
 // COM, set the ComVisible attribute to true on that type.
 [assembly: ComVisible(false)]
+
+// The following GUID is for the ID of the typelib if this project is exposed to COM
+[assembly: Guid("39508269-8435-4f49-af9a-e684eae56888")]
 
 // Version information for an assembly consists of the following four values:
 //
