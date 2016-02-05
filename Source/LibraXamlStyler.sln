@@ -1,11 +1,13 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 14
-VisualStudioVersion = 14.0.23107.0
+VisualStudioVersion = 14.0.24720.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LibraProgramming.Xaml.Parsing", "LibraProgramming.Xaml.Parsing\LibraProgramming.Xaml.Parsing.csproj", "{39508269-8435-4F49-AF9A-E684EAE56888}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UnitTests", "UnitTests\UnitTests.csproj", "{6D4AA76F-D260-4E8C-9801-F98EF2FF17D7}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LibraProgramming.VS2015.Package", "LibraProgramming.VS2015.Package\LibraProgramming.VS2015.Package.csproj", "{575B50EA-18AC-4CF6-8A47-4A744D03ABD5}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,6 +23,10 @@ Global
 		{6D4AA76F-D260-4E8C-9801-F98EF2FF17D7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6D4AA76F-D260-4E8C-9801-F98EF2FF17D7}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6D4AA76F-D260-4E8C-9801-F98EF2FF17D7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{575B50EA-18AC-4CF6-8A47-4A744D03ABD5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{575B50EA-18AC-4CF6-8A47-4A744D03ABD5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{575B50EA-18AC-4CF6-8A47-4A744D03ABD5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{575B50EA-18AC-4CF6-8A47-4A744D03ABD5}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
