@@ -41,6 +41,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Core\IXamlNode.cs" />
+    <Compile Include="Core\SourceXamlParsingException.cs" />
     <Compile Include="IXamlToken.cs" />
     <Compile Include="Core\NodeName.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

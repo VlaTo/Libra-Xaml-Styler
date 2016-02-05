@@ -16,7 +16,8 @@ namespace LibraProgramming.Xaml.Parsing.Core
         CloseAngleBracket,
         Slash,
         Dot,
-        Colon
+        Colon,
+        Quote
     }
 
     /// <summary>
@@ -181,6 +182,12 @@ namespace LibraProgramming.Xaml.Parsing.Core
                 case ':':
                 {
                     term = XamlTerminal.Colon;
+                    return true;
+                }
+
+                case '\"':
+                {
+                    term = XamlTerminal.Quote;
                     return true;
                 }
             }
