@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 
-namespace LibraProgramming.Xaml.Parsing.Core
+namespace LibraProgramming.Xaml.Core
 {
     internal class NodeName
     {

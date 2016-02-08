@@ -2,7 +2,7 @@
 using System.IO;
 using System.Text;
 
-namespace LibraProgramming.Xaml.Parsing.Core
+namespace LibraProgramming.Xaml.Core
 {
     /// <summary>
     /// 
@@ -23,7 +23,7 @@ namespace LibraProgramming.Xaml.Parsing.Core
     /// <summary>
     /// 
     /// </summary>
-    internal class SourceXamlTokenizer : IDisposable
+    internal class XamlTokenizer : IDisposable
     {
         private readonly TextReader reader;
         private readonly SourceXamlParsingContext context;
@@ -33,7 +33,7 @@ namespace LibraProgramming.Xaml.Parsing.Core
         private int bufferCount;
         private int bufferPosition;
 
-        public SourceXamlTokenizer(TextReader reader, SourceXamlParsingContext context)
+        public XamlTokenizer(TextReader reader, SourceXamlParsingContext context)
         {
             this.reader = reader;
             this.context = context;
@@ -143,6 +143,27 @@ namespace LibraProgramming.Xaml.Parsing.Core
             }
 
             return XamlTerminal.EOF;
+        }
+
+        public XamlTerminal GetAttributeValueString(StringBuilder builder)
+        {
+            while (true)
+            {
+                var current = ReadNextChar();
+
+                switch (current)
+                {
+                    case '\"':
+                        return XamlTerminal.Quote;
+
+                    case -1:
+                        return XamlTerminal.EOF;
+
+                    default:
+                        builder.Append((char) current);
+                        break;
+                }
+            }
         }
 
         private static bool ClassifyTerminal(int current, out XamlTerminal term)

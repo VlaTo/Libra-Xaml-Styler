@@ -1,19 +1,50 @@
 ﻿using System;
 using System.Collections.ObjectModel;
+using System.IO;
 using System.Text;
+using LibraProgramming.Xaml.Core;
 
-namespace LibraProgramming.Xaml.Parsing.Core
+namespace LibraProgramming.Xaml
 {
-    internal class SourceXamlParser
+    public sealed class XamlParser
     {
-        private readonly SourceXamlTokenizer tokenizer;
+        private readonly XamlTokenizer tokenizer;
 
-        public SourceXamlParser(SourceXamlTokenizer tokenizer)
+        private XamlParser(XamlTokenizer tokenizer)
         {
             this.tokenizer = tokenizer;
         }
 
-        public void Parse(XamlDocument document)
+        public static IXamlNode Parse(string text)
+        {
+            if (null == text)
+            {
+                throw new ArgumentNullException(nameof(text));
+            }
+
+            using (var reader = new StringReader(text))
+            {
+                return Parse(reader);
+            }
+        }
+
+        public static IXamlNode Parse(TextReader reader)
+        {
+            if (null == reader)
+            {
+                throw new ArgumentNullException(nameof(reader));
+            }
+
+            var context = new SourceXamlParsingContext();
+
+            using (var tokenizer = new XamlTokenizer(reader, context))
+            {
+                var parser = new XamlParser(tokenizer);
+                return parser.Parse();
+            }
+        }
+
+        private IXamlNode Parse()
         {
             while (true)
             {
@@ -26,7 +57,8 @@ namespace LibraProgramming.Xaml.Parsing.Core
 
                 if (XamlTerminal.OpenAngleBracket == term)
                 {
-                    var temp = ParseNodeOpenTag();
+                    var node = new XamlNode();
+                    var temp = ParseNode(node);
                 }
                 else
                 if (XamlTerminal.EOF == term)
@@ -34,12 +66,19 @@ namespace LibraProgramming.Xaml.Parsing.Core
                     break;
                 }
             }
+
+            return null;
         }
 
-        private XamlTerminal ParseNodeOpenTag()
+        private XamlTerminal ParseNode(XamlNode node)
         {
             NodeName nodeName;
             var term = ParseNodeName(out nodeName);
+
+            if (null != nodeName)
+            {
+                node.Name=nodeName.
+            }
 
             do
             {
@@ -50,8 +89,13 @@ namespace LibraProgramming.Xaml.Parsing.Core
                         break;
 
                     case XamlTerminal.Equal:
-                        term = ParseAttributeValue();
+                    {
+                        string value;
+
+                        term = ParseAttributeValue(out value);
+
                         break;
+                    }
 
                     case XamlTerminal.CloseAngleBracket:
                     case XamlTerminal.EOF:
@@ -110,8 +154,6 @@ namespace LibraProgramming.Xaml.Parsing.Core
 
                     case XamlTerminal.Whitespace:
                     case XamlTerminal.Equal:
-                        return term;
-
                     case XamlTerminal.CloseAngleBracket:
                         parts.Add(str);
                         nodeName = new NodeName(@namespace, parts);
@@ -123,7 +165,7 @@ namespace LibraProgramming.Xaml.Parsing.Core
             }
         }
 
-        private XamlTerminal ParseAttributeValue()
+        private XamlTerminal ParseAttributeValue(out string value)
         {
             var term = tokenizer.GetTerminal();
 
@@ -137,17 +179,18 @@ namespace LibraProgramming.Xaml.Parsing.Core
                 throw new SourceXamlParsingException();
             }
 
-//            var value = new StringBuilder();
+            var builder = new StringBuilder();
 
-            while (true)
+            term = tokenizer.GetAttributeValueString(builder);
+
+            if (XamlTerminal.Quote != term)
             {
-                term = tokenizer.GetTerminal();
-
-                if (XamlTerminal.Quote == term)
-                {
-                    return term;
-                }
+                throw new SourceXamlParsingException();
             }
+
+            value = builder.ToString();
+
+            return term;
         }
     }
 }

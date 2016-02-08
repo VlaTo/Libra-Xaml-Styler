@@ -7,8 +7,8 @@
     <ProjectGuid>{39508269-8435-4F49-AF9A-E684EAE56888}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>LibraProgramming.Xaml.Parsing</RootNamespace>
-    <AssemblyName>LibraProgramming.Xaml.Parsing</AssemblyName>
+    <RootNamespace>LibraProgramming.Xaml</RootNamespace>
+    <AssemblyName>LibraProgramming.Xaml</AssemblyName>
     <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>
@@ -42,13 +42,14 @@
   <ItemGroup>
     <Compile Include="Core\IXamlNode.cs" />
     <Compile Include="Core\SourceXamlParsingException.cs" />
-    <Compile Include="IXamlToken.cs" />
+    <Compile Include="Core\XamlNamespaceDeclaration.cs" />
+    <Compile Include="Core\XamlNode.cs" />
     <Compile Include="Core\NodeName.cs" />
+    <Compile Include="Core\XamlNodeName.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Core\SourceXamlParser.cs" />
+    <Compile Include="XamlParser.cs" />
     <Compile Include="Core\SourceXamlParsingContext.cs" />
-    <Compile Include="Core\SourceXamlTokenizer.cs" />
-    <Compile Include="XamlDocument.cs" />
+    <Compile Include="Core\XamlTokenizer.cs" />
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

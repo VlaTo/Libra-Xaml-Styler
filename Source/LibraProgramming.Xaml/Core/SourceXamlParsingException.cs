@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace LibraProgramming.Xaml.Parsing.Core
+namespace LibraProgramming.Xaml.Core
 {
     public class SourceXamlParsingException : Exception
     {

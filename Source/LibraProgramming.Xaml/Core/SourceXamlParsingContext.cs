@@ -1,4 +1,4 @@
-﻿namespace LibraProgramming.Xaml.Parsing.Core
+﻿namespace LibraProgramming.Xaml.Core
 {
     public class SourceXamlParsingContext
     {
