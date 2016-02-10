@@ -3,7 +3,10 @@ using System.Diagnostics;
 using System.IO;
 using System.Text;
 using EnvDTE;
+using LibraProgramming.Xaml;
+using LibraProgramming.Xaml.Core;
 using LibraProgramming.Xaml.Parsing;
+using LibraProgramming.Xaml.Visitors;
 
 namespace LibraProgramming.VS2015.Package.Commands
 {
@@ -61,14 +64,17 @@ namespace LibraProgramming.VS2015.Package.Commands
             var start = textDocument.StartPoint.CreateEditPoint();
             var end = textDocument.EndPoint.CreateEditPoint();
 
-            var text = new StringBuilder();
             var current = textDocument.Selection.ActivePoint;
             var linenumber = current.Line;
             var charoffset = current.LineCharOffset;
 
             using (var reader = new StringReader(start.GetText(end)))
             {
-                var ast = XamlDocument.Parse(reader);
+                var text = new StringBuilder();
+                var node = XamlParser.Parse(reader);
+                var visitor = new StylerNodeVisitor(text);
+
+                visitor.Visit(node);
 
                 start.ReplaceText(end, text.ToString(), 0);
             }

@@ -185,7 +185,7 @@
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\LibraProgramming.Xaml.Parsing\LibraProgramming.Xaml.Parsing.csproj">
+    <ProjectReference Include="..\LibraProgramming.Xaml\LibraProgramming.Xaml.csproj">
       <Project>{39508269-8435-4f49-af9a-e684eae56888}</Project>
       <Name>LibraProgramming.Xaml.Parsing</Name>
     </ProjectReference>

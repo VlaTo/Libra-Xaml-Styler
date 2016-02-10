@@ -43,10 +43,12 @@
     <Compile Include="Core\IXamlNode.cs" />
     <Compile Include="Core\SourceXamlParsingException.cs" />
     <Compile Include="Core\XamlNamespaceDeclaration.cs" />
-    <Compile Include="Core\XamlNode.cs" />
     <Compile Include="Core\NodeName.cs" />
+    <Compile Include="Core\XamlNode.cs" />
     <Compile Include="Core\XamlNodeName.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Visitors\StylerNodeVisitor.cs" />
+    <Compile Include="Visitors\XamlNodeVisitor.cs" />
     <Compile Include="XamlParser.cs" />
     <Compile Include="Core\SourceXamlParsingContext.cs" />
     <Compile Include="Core\XamlTokenizer.cs" />

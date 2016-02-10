@@ -75,10 +75,10 @@ namespace LibraProgramming.Xaml
             NodeName nodeName;
             var term = ParseNodeName(out nodeName);
 
-            if (null != nodeName)
+            /*if (null != nodeName)
             {
                 node.Name=nodeName.
-            }
+            }*/
 
             do
             {
