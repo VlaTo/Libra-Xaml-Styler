@@ -35,16 +35,20 @@ namespace LibraProgramming.Xaml
                 throw new ArgumentNullException(nameof(reader));
             }
 
-            var context = new SourceXamlParsingContext();
+//            var context = new SourceXamlParsingContext();
 
-            using (var tokenizer = new XamlTokenizer(reader, context))
+            using (var tokenizer = new XamlTokenizer(reader))
             {
+                var root = new XamlRootNode();
                 var parser = new XamlParser(tokenizer);
-                return parser.Parse();
+
+                parser.Parse(root);
+
+                return root.First;
             }
         }
 
-        private IXamlNode Parse()
+        private void Parse(XamlNode root)
         {
             while (true)
             {
@@ -57,8 +61,7 @@ namespace LibraProgramming.Xaml
 
                 if (XamlTerminal.OpenAngleBracket == term)
                 {
-                    var node = new XamlNode();
-                    var temp = ParseNode(node);
+                    var temp = ParseNode(root);
                 }
                 else
                 if (XamlTerminal.EOF == term)
@@ -66,51 +69,109 @@ namespace LibraProgramming.Xaml
                     break;
                 }
             }
-
-            return null;
         }
 
-        private XamlTerminal ParseNode(XamlNode node)
+        private XamlTerminal ParseNode(XamlNode parent)
         {
             NodeName nodeName;
+
             var term = ParseNodeName(out nodeName);
 
-            /*if (null != nodeName)
+            if (null == nodeName)
             {
-                node.Name=nodeName.
-            }*/
+                throw new SourceXamlParsingException();
+            }
 
-            do
+            var node = new XamlNode(nodeName.Parts)
+            {
+                Parent = parent
+            };
+
+            while (true)
             {
                 switch (term)
                 {
                     case XamlTerminal.Whitespace:
-                        term = ParseNodeName(out nodeName);
+                        term = ParseAttribute(node);
                         break;
-
-                    case XamlTerminal.Equal:
-                    {
-                        string value;
-
-                        term = ParseAttributeValue(out value);
-
-                        break;
-                    }
 
                     case XamlTerminal.CloseAngleBracket:
                     case XamlTerminal.EOF:
                         return term;
 
+                    case XamlTerminal.Slash:
+                    {
+                        term = tokenizer.GetTerminal();
+
+                        if (XamlTerminal.CloseAngleBracket != term)
+                        {
+                            throw new SourceXamlParsingException();
+                        }
+
+                        return term;
+                    }
+
                     default:
                         throw new SourceXamlParsingException();
                 }
+            }
+        }
 
-            } while (true);
+        private XamlTerminal ParseAttribute(XamlNode node)
+        {
+            NodeName nodeName;
+
+            for (var temp = tokenizer.PeekTerminal();
+                XamlTerminal.EOF != temp && XamlTerminal.Whitespace == temp;
+                temp = tokenizer.GetTerminal())
+            {
+            }
+
+            var term = ParseNodeName(out nodeName);
+
+            if (null == nodeName)
+            {
+                throw new SourceXamlParsingException();
+            }
+
+            var attribute = new XamlAttribute(nodeName.Parts)
+            {
+                Node = node
+            };
+
+            while (XamlTerminal.EOF != term && XamlTerminal.Whitespace == term)
+            {
+                term = tokenizer.GetTerminal();
+            }
+
+            if (XamlTerminal.Equal == term)
+            {
+                while (XamlTerminal.EOF != term && XamlTerminal.Whitespace == term)
+                {
+                    term = tokenizer.GetTerminal();
+                }
+
+                if (XamlTerminal.Quote != term)
+                {
+                    throw new SourceXamlParsingException();
+                }
+
+                var builder = new StringBuilder();
+
+                term = tokenizer.GetAttributeValueString(builder);
+
+                if (XamlTerminal.Quote == term)
+                {
+                    attribute.Value = builder.ToString();
+                }
+            }
+
+            return term;
         }
 
         private XamlTerminal ParseNodeName(out NodeName nodeName)
         {
-            var @namespace = String.Empty;
+            var alias = String.Empty;
             var parts =  new Collection<string>();
 
             nodeName = null;
@@ -124,9 +185,9 @@ namespace LibraProgramming.Xaml
                 switch (term)
                 {
                     case XamlTerminal.Colon:
-                        if (String.IsNullOrEmpty(@namespace) && 0 < str.Length)
+                        if (String.IsNullOrEmpty(alias) && 0 < str.Length)
                         {
-                            @namespace = str;
+                            alias = str;
                             continue;
                         }
 
@@ -147,7 +208,7 @@ namespace LibraProgramming.Xaml
 
                         parts.Add(str);
 
-                        nodeName = new NodeName(@namespace, parts);
+                        nodeName = new NodeName(alias, parts);
 
                         return temp;
                     }
@@ -156,7 +217,64 @@ namespace LibraProgramming.Xaml
                     case XamlTerminal.Equal:
                     case XamlTerminal.CloseAngleBracket:
                         parts.Add(str);
-                        nodeName = new NodeName(@namespace, parts);
+                        nodeName = new NodeName(alias, parts);
+                        return term;
+
+                    default:
+                        throw new Exception();
+                }
+            }
+        }
+
+        private XamlTerminal ParseAttributeName(out NodeName nodeName)
+        {
+            var alias = String.Empty;
+            var parts =  new Collection<string>();
+
+            nodeName = null;
+
+            while (true)
+            {
+                string str;
+
+                var term = tokenizer.GetAlphaNumericString(out str);
+
+                switch (term)
+                {
+                    case XamlTerminal.Colon:
+                        if (String.IsNullOrEmpty(alias) && 0 < str.Length)
+                        {
+                            alias = str;
+                            continue;
+                        }
+
+                        throw new SourceXamlParsingException();
+
+                    case XamlTerminal.Dot:
+                        parts.Add(str);
+                        break;
+
+                    case XamlTerminal.Slash:
+                    {
+                        var temp = tokenizer.GetTerminal();
+
+                        if (XamlTerminal.CloseAngleBracket != temp)
+                        {
+                                throw new Exception();
+                        }
+
+                        parts.Add(str);
+
+                        nodeName = new NodeName(alias, parts);
+
+                        return temp;
+                    }
+
+                    case XamlTerminal.Whitespace:
+                    case XamlTerminal.Equal:
+                    case XamlTerminal.CloseAngleBracket:
+                        parts.Add(str);
+                        nodeName = new NodeName(alias, parts);
                         return term;
 
                     default:

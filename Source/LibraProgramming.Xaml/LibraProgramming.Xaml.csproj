@@ -40,12 +40,15 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Core\IXamlAttribute.cs" />
     <Compile Include="Core\IXamlNode.cs" />
     <Compile Include="Core\SourceXamlParsingException.cs" />
+    <Compile Include="Core\XamlAttribute.cs" />
     <Compile Include="Core\XamlNamespaceDeclaration.cs" />
     <Compile Include="Core\NodeName.cs" />
     <Compile Include="Core\XamlNode.cs" />
     <Compile Include="Core\XamlNodeName.cs" />
+    <Compile Include="Core\XamlRootNode.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Visitors\StylerNodeVisitor.cs" />
     <Compile Include="Visitors\XamlNodeVisitor.cs" />

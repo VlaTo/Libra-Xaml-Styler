@@ -4,6 +4,25 @@ using System.Text;
 
 namespace LibraProgramming.Xaml.Core
 {
+    internal struct SourcePosition
+    {
+        public int LineNumber
+        {
+            get;
+        }
+
+        public int CharPosition
+        {
+            get;
+        }
+
+        public SourcePosition(int lineNumber, int charPosition)
+        {
+            LineNumber = lineNumber;
+            CharPosition = charPosition;
+        }
+    }
+
     /// <summary>
     /// 
     /// </summary>
@@ -26,22 +45,28 @@ namespace LibraProgramming.Xaml.Core
     internal class XamlTokenizer : IDisposable
     {
         private readonly TextReader reader;
-        private readonly SourceXamlParsingContext context;
+//        private readonly SourceXamlParsingContext context;
         private bool disposed;
-        private TokenizerState state;
-        private char[] buffer;
-        private int bufferCount;
-        private int bufferPosition;
+        private int lineNumber;
+        private int charPosition;
+//        private TokenizerState state;
+//        private char[] buffer;
+//        private int bufferCount;
+//        private int bufferPosition;
 
-        public XamlTokenizer(TextReader reader, SourceXamlParsingContext context)
+        public XamlTokenizer(TextReader reader)
         {
             this.reader = reader;
-            this.context = context;
 
-            state = TokenizerState.DocumentBegin;
-            buffer = new char[128];
-            bufferCount = 0;
-            bufferPosition = 0;
+            lineNumber = 1;
+            charPosition = 1;
+
+//            this.context = context;
+
+//            state = TokenizerState.DocumentBegin;
+//            buffer = new char[128];
+//            bufferCount = 0;
+//            bufferPosition = 0;
         }
 
         public void Dispose()
@@ -91,10 +116,28 @@ namespace LibraProgramming.Xaml.Core
         }
 */
 
+        public SourcePosition GetSourcePosition()
+        {
+            return new SourcePosition(lineNumber, charPosition);
+        }
+
         public XamlTerminal GetTerminal()
         {
             XamlTerminal term;
             var current = ReadNextChar();
+
+            if (ClassifyTerminal(current, out term))
+            {
+                return term;
+            }
+
+            throw new Exception();
+        }
+
+        public XamlTerminal PeekTerminal()
+        {
+            XamlTerminal term;
+            var current = PeekNextChar();
 
             if (ClassifyTerminal(current, out term))
             {
@@ -114,7 +157,7 @@ namespace LibraProgramming.Xaml.Core
 
                 if (-1 == current)
                 {
-                    str = null;
+                    str = name.ToString();
                     break;
                 }
 
@@ -124,22 +167,28 @@ namespace LibraProgramming.Xaml.Core
                     {
                         throw new Exception();
                     }
+
+                    name.Append((char) current);
+
+                    continue;
                 }
-                else if (!Char.IsLetter((char) current) && '_' != current)
+
+                if (Char.IsLetter((char) current) || '_' == current)
                 {
-                    XamlTerminal term;
-
-                    str = name.ToString();
-
-                    if (ClassifyTerminal(current, out term))
-                    {
-                        return term;
-                    }
-
-                    throw new Exception();
+                    name.Append((char) current);
+                    continue;
                 }
 
-                name.Append((char) current);
+                XamlTerminal term;
+
+                str = name.ToString();
+
+                if (ClassifyTerminal(current, out term))
+                {
+                    return term;
+                }
+
+                throw new Exception();
             }
 
             return XamlTerminal.EOF;
@@ -305,7 +354,7 @@ namespace LibraProgramming.Xaml.Core
 
         private int ReadNextChar()
         {
-            if (bufferPosition == bufferCount)
+            /*if (bufferPosition == bufferCount)
             {
                 var count = reader.Read(buffer, 0, buffer.Length);
 
@@ -318,10 +367,32 @@ namespace LibraProgramming.Xaml.Core
                 bufferPosition = 0;
             }
 
-            return buffer[bufferPosition++];
+            return buffer[bufferPosition++];*/
+
+            var current = reader.Read();
+
+            if (-1 != current)
+            {
+                if ('\n' == (char) current)
+                {
+                    lineNumber++;
+                    charPosition = 1;
+                }
+                else if ('\r' != (char) current)
+                {
+                    charPosition++;
+                }
+            }
+
+            return current;
         }
 
-        private enum TokenizerState
+        private int PeekNextChar()
+        {
+            return reader.Peek();
+        }
+
+        /*private enum TokenizerState
         {
             Error = -1,
 
@@ -332,6 +403,6 @@ namespace LibraProgramming.Xaml.Core
             MultilineCommentProbe1,
 
             EndOfDocument
-        }
+        }*/
     }
 }
