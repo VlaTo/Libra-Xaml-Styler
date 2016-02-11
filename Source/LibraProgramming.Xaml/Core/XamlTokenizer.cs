@@ -260,15 +260,18 @@ namespace LibraProgramming.Xaml.Core
                     term = XamlTerminal.Quote;
                     return true;
                 }
-            }
 
-            if (Char.IsWhiteSpace((char) current) || Char.IsControl((char) current))
-            {
-                term = XamlTerminal.Whitespace;
-                return true;
-            }
+                default:
+                    if (Char.IsWhiteSpace((char) current) || Char.IsControl((char) current))
+                    {
+                        term = XamlTerminal.Whitespace;
+                        return true;
+                    }
 
-            term = XamlTerminal.EOF;
+                    term = XamlTerminal.EOF;
+
+                    break;
+            }
 
             return false;
         }

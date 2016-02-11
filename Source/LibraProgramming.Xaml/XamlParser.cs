@@ -61,7 +61,7 @@ namespace LibraProgramming.Xaml
 
                 if (XamlTerminal.OpenAngleBracket == term)
                 {
-                    var temp = ParseNode(root);
+                    term = ParseNode(root);
                 }
                 else
                 if (XamlTerminal.EOF == term)
@@ -92,8 +92,17 @@ namespace LibraProgramming.Xaml
                 switch (term)
                 {
                     case XamlTerminal.Whitespace:
+                    {
                         term = ParseAttribute(node);
+
+                        if (XamlTerminal.Quote != term)
+                        {
+                            throw new SourceXamlParsingException();
+                        }
+
+//                        term=tokenizer
                         break;
+                    }
 
                     case XamlTerminal.CloseAngleBracket:
                     case XamlTerminal.EOF:
@@ -121,50 +130,87 @@ namespace LibraProgramming.Xaml
         {
             NodeName nodeName;
 
-            for (var temp = tokenizer.PeekTerminal();
+            /*for (var temp = tokenizer.PeekTerminal();
                 XamlTerminal.EOF != temp && XamlTerminal.Whitespace == temp;
                 temp = tokenizer.GetTerminal())
             {
-            }
+            }*/
 
             var term = ParseNodeName(out nodeName);
 
             if (null == nodeName)
             {
-                throw new SourceXamlParsingException();
+                return term;
             }
 
             var attribute = new XamlAttribute(nodeName.Parts)
             {
                 Node = node
             };
+            var hasequal = false;
+
+            while (true)
+            {
+                term = tokenizer.GetTerminal();
+
+                switch (term)
+                {
+                    case XamlTerminal.Whitespace:
+                        continue;
+
+                    case XamlTerminal.Equal:
+                        if (hasequal)
+                        {
+                            throw new SourceXamlParsingException();
+                        }
+
+                        hasequal = true;
+
+                        break;
+
+                    case XamlTerminal.Quote:
+                        var builder = new StringBuilder();
+
+                        term = tokenizer.GetAttributeValueString(builder);
+
+                        if (XamlTerminal.Quote == term)
+                        {
+                            attribute.Value = builder.ToString();
+                            return term;
+                        }
+
+                        break;
+                }
+            }
+
+            /*while (XamlTerminal.EOF != term && XamlTerminal.Whitespace == term)
+            {
+                term = tokenizer.GetTerminal();
+            }
+
+            if (XamlTerminal.Equal != term)
+            {
+                return term;
+            }
 
             while (XamlTerminal.EOF != term && XamlTerminal.Whitespace == term)
             {
                 term = tokenizer.GetTerminal();
             }
 
-            if (XamlTerminal.Equal == term)
+            if (XamlTerminal.Quote != term)
             {
-                while (XamlTerminal.EOF != term && XamlTerminal.Whitespace == term)
-                {
-                    term = tokenizer.GetTerminal();
-                }
-
-                if (XamlTerminal.Quote != term)
-                {
-                    throw new SourceXamlParsingException();
-                }
-
-                var builder = new StringBuilder();
-
-                term = tokenizer.GetAttributeValueString(builder);
-
-                if (XamlTerminal.Quote == term)
-                {
-                    attribute.Value = builder.ToString();
-                }
+                throw new SourceXamlParsingException();
             }
+
+            var builder = new StringBuilder();
+
+            term = tokenizer.GetAttributeValueString(builder);
+
+            if (XamlTerminal.Quote == term)
+            {
+                attribute.Value = builder.ToString();
+            }*/
 
             return term;
         }
@@ -203,7 +249,7 @@ namespace LibraProgramming.Xaml
 
                         if (XamlTerminal.CloseAngleBracket != temp)
                         {
-                                throw new Exception();
+                            throw new Exception();
                         }
 
                         parts.Add(str);
@@ -214,10 +260,23 @@ namespace LibraProgramming.Xaml
                     }
 
                     case XamlTerminal.Whitespace:
-                    case XamlTerminal.Equal:
+                        if (String.IsNullOrEmpty(str))
+                        {
+                            return term;
+                        }
+
+                        parts.Add(str);
+
+                        nodeName = new NodeName(alias, parts);
+
+                        return term;
+
+                    //                    case XamlTerminal.Equal:
                     case XamlTerminal.CloseAngleBracket:
                         parts.Add(str);
+
                         nodeName = new NodeName(alias, parts);
+
                         return term;
 
                     default:
