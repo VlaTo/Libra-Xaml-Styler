@@ -1,4 +1,5 @@
 ﻿using System;
+using System.CodeDom;
 using System.IO;
 using System.Text;
 
@@ -36,7 +37,8 @@ namespace LibraProgramming.Xaml.Core
         Slash,
         Dot,
         Colon,
-        Quote
+        Quote,
+        Unknown = Int32.MaxValue
     }
 
     /// <summary>
@@ -261,6 +263,12 @@ namespace LibraProgramming.Xaml.Core
                     return true;
                 }
 
+                case -1:
+                {
+                    term = XamlTerminal.EOF;
+                    return true;
+                }
+
                 default:
                     if (Char.IsWhiteSpace((char) current) || Char.IsControl((char) current))
                     {
@@ -268,7 +276,7 @@ namespace LibraProgramming.Xaml.Core
                         return true;
                     }
 
-                    term = XamlTerminal.EOF;
+                    term = XamlTerminal.Unknown;
 
                     break;
             }

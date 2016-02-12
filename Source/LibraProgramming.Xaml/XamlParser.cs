@@ -35,8 +35,6 @@ namespace LibraProgramming.Xaml
                 throw new ArgumentNullException(nameof(reader));
             }
 
-//            var context = new SourceXamlParsingContext();
-
             using (var tokenizer = new XamlTokenizer(reader))
             {
                 var root = new XamlRootNode();
@@ -54,19 +52,22 @@ namespace LibraProgramming.Xaml
             {
                 var term = tokenizer.GetTerminal();
 
-                if (XamlTerminal.Whitespace == term)
+                switch (term)
                 {
-                    continue;
-                }
+                    case XamlTerminal.Whitespace:
+                        continue;
 
-                if (XamlTerminal.OpenAngleBracket == term)
-                {
-                    term = ParseNode(root);
-                }
-                else
-                if (XamlTerminal.EOF == term)
-                {
-                    break;
+                    case XamlTerminal.OpenAngleBracket:
+                    {
+                        var temp = ParseNode(root);
+                        break;
+                    }
+
+                    case XamlTerminal.EOF:
+                        return;
+
+                    default:
+                        throw new SourceXamlParsingException();
                 }
             }
         }
@@ -100,7 +101,8 @@ namespace LibraProgramming.Xaml
                             throw new SourceXamlParsingException();
                         }
 
-//                        term=tokenizer
+                        term = tokenizer.GetTerminal();
+
                         break;
                     }
 
@@ -130,12 +132,6 @@ namespace LibraProgramming.Xaml
         {
             NodeName nodeName;
 
-            /*for (var temp = tokenizer.PeekTerminal();
-                XamlTerminal.EOF != temp && XamlTerminal.Whitespace == temp;
-                temp = tokenizer.GetTerminal())
-            {
-            }*/
-
             var term = ParseNodeName(out nodeName);
 
             if (null == nodeName)
@@ -143,20 +139,18 @@ namespace LibraProgramming.Xaml
                 return term;
             }
 
+            var hasequal = false;
             var attribute = new XamlAttribute(nodeName.Parts)
             {
                 Node = node
             };
-            var hasequal = false;
 
             while (true)
             {
-                term = tokenizer.GetTerminal();
-
                 switch (term)
                 {
                     case XamlTerminal.Whitespace:
-                        continue;
+                        break;
 
                     case XamlTerminal.Equal:
                         if (hasequal)
@@ -181,6 +175,9 @@ namespace LibraProgramming.Xaml
 
                         break;
                 }
+
+                term = tokenizer.GetTerminal();
+
             }
 
             /*while (XamlTerminal.EOF != term && XamlTerminal.Whitespace == term)
@@ -271,7 +268,7 @@ namespace LibraProgramming.Xaml
 
                         return term;
 
-                    //                    case XamlTerminal.Equal:
+                    case XamlTerminal.Equal:
                     case XamlTerminal.CloseAngleBracket:
                         parts.Add(str);
 
