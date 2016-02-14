@@ -47,14 +47,9 @@ namespace LibraProgramming.Xaml.Core
     internal class XamlTokenizer : IDisposable
     {
         private readonly TextReader reader;
-//        private readonly SourceXamlParsingContext context;
         private bool disposed;
         private int lineNumber;
         private int charPosition;
-//        private TokenizerState state;
-//        private char[] buffer;
-//        private int bufferCount;
-//        private int bufferPosition;
 
         public XamlTokenizer(TextReader reader)
         {
@@ -62,61 +57,12 @@ namespace LibraProgramming.Xaml.Core
 
             lineNumber = 1;
             charPosition = 1;
-
-//            this.context = context;
-
-//            state = TokenizerState.DocumentBegin;
-//            buffer = new char[128];
-//            bufferCount = 0;
-//            bufferPosition = 0;
         }
 
         public void Dispose()
         {
             Dispose(true);
         }
-
-/*
-        public IXamlToken GetNextToken()
-        {
-            while (true)
-            {
-                var input = ReadNextChar();
-                var current = (char) input;
-                var iseof = -1 == input;
-
-                switch (state)
-                {
-                    case TokenizerState.DocumentBegin:
-                        if (Char.IsWhiteSpace(current))
-                        {
-                            continue;
-                        }
-
-                        if ('<' == current)
-                        {
-                            state = TokenizerState.NodeBeginTerminal;
-                        }
-
-                        break;
-
-                    case TokenizerState.NodeBeginTerminal:
-                        if ('!' == current)
-                        {
-                            state = TokenizerState.MultilineCommentProbe1;
-                            continue;
-                        }
-
-                        if (Char.IsLetter(current) || '_' == current)
-                        {
-                            state = TokenizerState.TagOrAliasBegin;
-                        }
-
-                        break;
-                }
-            }
-        }
-*/
 
         public SourcePosition GetSourcePosition()
         {
@@ -127,19 +73,6 @@ namespace LibraProgramming.Xaml.Core
         {
             XamlTerminal term;
             var current = ReadNextChar();
-
-            if (ClassifyTerminal(current, out term))
-            {
-                return term;
-            }
-
-            throw new Exception();
-        }
-
-        public XamlTerminal PeekTerminal()
-        {
-            XamlTerminal term;
-            var current = PeekNextChar();
 
             if (ClassifyTerminal(current, out term))
             {
@@ -190,7 +123,9 @@ namespace LibraProgramming.Xaml.Core
                     return term;
                 }
 
-                throw new Exception();
+                var position = GetSourcePosition();
+
+                throw new TokenizerException(position.LineNumber, position.CharPosition);
             }
 
             return XamlTerminal.EOF;
@@ -284,65 +219,6 @@ namespace LibraProgramming.Xaml.Core
             return false;
         }
 
-        /*while (true)
-        {
-            if (-1 == current)
-            {
-                return null;
-            }
-
-            if (!Char.IsWhiteSpace((char)current))
-            {
-                break;
-            }
-
-            current = ReadNextChar();
-        }
-
-        var @namespace = String.Empty;
-        var name = new StringBuilder();
-
-        while (true)
-        {
-            if (':' == current)
-            {
-                if (0 == name.Length)
-                {
-                    throw new Exception();
-                }
-
-                if (0 < @namespace.Length)
-                {
-                    throw new Exception();
-                }
-
-                @namespace = name.ToString();
-                name.Clear();
-
-                continue;
-            }
-
-            if (Char.IsDigit((char) current))
-            {
-                if (0 == name.Length)
-                {
-                    throw new Exception();
-                }
-            }
-            else
-            if (!Char.IsLetter((char) current) && '_' != current)
-            {
-                // rollback one char
-                break;
-            }
-
-            name.Append((char) current);
-
-            current = ReadNextChar();
-        }
-
-        return new NodeName(@namespace, name.ToString());*/
-
         private void Dispose(bool dispose)
         {
             if (disposed)
@@ -365,21 +241,6 @@ namespace LibraProgramming.Xaml.Core
 
         private int ReadNextChar()
         {
-            /*if (bufferPosition == bufferCount)
-            {
-                var count = reader.Read(buffer, 0, buffer.Length);
-
-                if (0 == count)
-                {
-                    return -1;
-                }
-
-                bufferCount = count;
-                bufferPosition = 0;
-            }
-
-            return buffer[bufferPosition++];*/
-
             var current = reader.Read();
 
             if (-1 != current)
@@ -397,23 +258,5 @@ namespace LibraProgramming.Xaml.Core
 
             return current;
         }
-
-        private int PeekNextChar()
-        {
-            return reader.Peek();
-        }
-
-        /*private enum TokenizerState
-        {
-            Error = -1,
-
-            DocumentBegin,
-            NodeBeginTerminal,
-            TagOrAliasBegin,
-
-            MultilineCommentProbe1,
-
-            EndOfDocument
-        }*/
     }
 }

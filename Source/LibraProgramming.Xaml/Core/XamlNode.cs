@@ -8,6 +8,8 @@ namespace LibraProgramming.Xaml.Core
     internal class XamlNode : IXamlNode
     {
         private XamlNode parent;
+        private string prefix;
+        private string name;
 
         public Collection<XamlAttribute> Attributes
         {
@@ -42,14 +44,85 @@ namespace LibraProgramming.Xaml.Core
             }
         }
 
-        public string Name
+        public string BaseURI
         {
-            get;
+            get
+            {
+                if (String.IsNullOrEmpty(Prefix))
+                {
+                    return String.Empty;
+                }
+
+                var resolver = new XamlNamespaceResolver(this);
+
+                return resolver.GetUri(Prefix);
+            }
         }
 
-        public IReadOnlyCollection<string> NameSegments
+        public string Prefix
+        {
+            get
+            {
+                return prefix;
+            }
+            set
+            {
+                if (null == value)
+                {
+                    throw new ArgumentNullException(nameof(value));
+                }
+
+                if (String.Equals(prefix, value))
+                {
+                    return;
+                }
+
+                prefix = value;
+            }
+        }
+
+        public string Name
+        {
+            get
+            {
+                return name;
+            }
+            set
+            {
+                if (null == value)
+                {
+                    throw new ArgumentNullException(nameof(value));
+                }
+
+                if (String.Equals(name, value))
+                {
+                    return;
+                }
+
+                name = value;
+            }
+        }
+
+        public string LocalName
+        {
+            get
+            {
+                for (int index = name.Length - 1; index >= 0; index--)
+                {
+                    if ('.' == name[index])
+                    {
+                        return name.Substring(index);
+                    }
+                }
+
+                return name;
+            }
+        }
+
+        public bool IsInline
         {
             get;
+            set;
         }
 
         public XamlNode First => Children.FirstOrDefault();
@@ -62,17 +135,11 @@ namespace LibraProgramming.Xaml.Core
         
         IXamlNode IXamlNode.Parent => Parent;
 
-        public XamlNode(IReadOnlyCollection<string> nameSegments)
+        public XamlNode()
         {
-            if (null == nameSegments)
-            {
-                throw new ArgumentNullException(nameof(nameSegments));
-            }
-
+            prefix = String.Empty;
             Attributes = new Collection<XamlAttribute>();
             Children = new Collection<XamlNode>();
-            NameSegments = nameSegments;
-            Name = String.Join('.'.ToString(), nameSegments);
         }
     }
 }

@@ -4,7 +4,22 @@ namespace LibraProgramming.Xaml.Core
 {
     public interface IXamlNode
     {
+        string BaseURI
+        {
+            get;
+        }
+
+        string Name
+        {
+            get;
+        }
+
         IXamlNode Parent
+        {
+            get;
+        }
+
+        string Prefix
         {
             get;
         }
@@ -15,16 +30,6 @@ namespace LibraProgramming.Xaml.Core
         }
 
         IReadOnlyCollection<IXamlNode> Children
-        {
-            get;
-        }
-
-        string Name
-        {
-            get;
-        }
-
-        IReadOnlyCollection<string> NameSegments
         {
             get;
         }

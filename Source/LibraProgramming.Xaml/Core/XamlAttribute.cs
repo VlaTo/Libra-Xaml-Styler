@@ -1,11 +1,12 @@
 ﻿using System;
-using System.Collections.Generic;
 
 namespace LibraProgramming.Xaml.Core
 {
     internal sealed class XamlAttribute : IXamlAttribute
     {
         private XamlNode node;
+        private string prefix;
+        private string name;
 
         public XamlNode Node
         {
@@ -17,7 +18,7 @@ namespace LibraProgramming.Xaml.Core
             {
                 if (null != node)
                 {
-                    throw new SourceXamlParsingException();
+                    throw new XamlParsingException();
                 }
 
                 if (null == value)
@@ -32,7 +33,46 @@ namespace LibraProgramming.Xaml.Core
 
         public string Name
         {
-            get;
+            get
+            {
+                return name;
+            }
+            internal set
+            {
+                if (null == value)
+                {
+                    throw new ArgumentNullException(nameof(value));
+                }
+
+                if (String.Equals(name, value))
+                {
+                    return;
+                }
+
+                name = value;
+            }
+        }
+
+        public string Prefix
+        {
+            get
+            {
+                return prefix;
+            }
+            set
+            {
+                if (null == value)
+                {
+                    throw new ArgumentNullException(nameof(value));
+                }
+
+                if (String.Equals(prefix, value))
+                {
+                    return;
+                }
+
+                prefix = value;
+            }
         }
 
         public string Value
@@ -41,20 +81,6 @@ namespace LibraProgramming.Xaml.Core
             internal set;
         }
 
-        public IReadOnlyCollection<string> NameSegments
-        {
-            get;
-        }
-
-        IXamlNode IXamlAttribute.Node
-        {
-            get;
-        }
-
-        public XamlAttribute(IReadOnlyCollection<string> nameSegments)
-        {
-            NameSegments = nameSegments;
-            Name = String.Join('.'.ToString(), nameSegments);
-        }
+        IXamlNode IXamlAttribute.Node => Node;
     }
 }

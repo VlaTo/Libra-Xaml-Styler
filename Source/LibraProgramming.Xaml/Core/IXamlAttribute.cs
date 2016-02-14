@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Reflection;
 
 namespace LibraProgramming.Xaml.Core
 {
@@ -9,15 +10,15 @@ namespace LibraProgramming.Xaml.Core
             get;
         }
 
-        string Name
+        string Prefix
         {
             get;
         }
 
-        IReadOnlyCollection<string> NameSegments
+        string Name
         {
             get;
-        } 
+        }
 
         string Value
         {

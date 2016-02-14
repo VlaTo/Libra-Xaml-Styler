@@ -6,30 +6,30 @@ namespace LibraProgramming.Xaml.Core
 {
     internal class NodeName
     {
-        public string Namespace
+        public string Prefix
         {
             get;
         }
 
-        public IReadOnlyCollection<string> Parts
+        public string Name
         {
             get;
         }
 
-        public NodeName(string ns, IList<string> parts)
+        public NodeName(string prefix, string name)
         {
-            if (null == ns)
+            if (null == prefix)
             {
-                throw new ArgumentNullException(nameof(ns));
+                throw new ArgumentNullException(nameof(prefix));
             }
 
-            if (null == parts)
+            if (null == name)
             {
-                throw new ArgumentNullException(nameof(parts));
+                throw new ArgumentNullException(nameof(name));
             }
 
-            Namespace = ns;
-            Parts = new ReadOnlyCollection<string>(parts);
+            Prefix = prefix;
+            Name = name;
         }
     }
 }

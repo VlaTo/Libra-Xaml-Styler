@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System;
+using System.Text;
 using LibraProgramming.Xaml.Core;
 
 namespace LibraProgramming.Xaml.Visitors
@@ -12,10 +13,43 @@ namespace LibraProgramming.Xaml.Visitors
             this.builder = builder;
         }
 
-        protected override void VisitNode(IXamlNode node)
+        protected override void VisitOpenTag(IXamlNode node)
         {
-            builder.Append("node");
-            base.VisitNode(node);
+            builder.Append('<');
+
+            if (!String.IsNullOrEmpty(node.Prefix))
+            {
+                builder.Append(node.Prefix).Append(':');
+            }
+
+            builder.Append(node.Name);
+
+            base.VisitOpenTag(node);
+
+            builder.Append('>');
+        }
+
+        protected override void VisitNodeAttribute(IXamlAttribute attribute)
+        {
+            builder.Append(' ');
+
+            if (!String.IsNullOrEmpty(attribute.Prefix))
+            {
+                builder.Append(attribute.Prefix).Append(':');
+            }
+
+            builder.Append(attribute.Name);
+
+            if (!String.IsNullOrEmpty(attribute.Value))
+            {
+                builder
+                    .Append('=')
+                    .Append('\"')
+                    .Append(attribute.Value)
+                    .Append('\"');
+            }
+
+            base.VisitNodeAttribute(attribute);
         }
     }
 }
