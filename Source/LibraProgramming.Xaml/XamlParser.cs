@@ -249,6 +249,11 @@ namespace LibraProgramming.Xaml
 
                     case XamlTerminal.Slash:
                     {
+                        if (String.IsNullOrEmpty(str))
+                        {
+                            return term;
+                        }
+
                         var temp = tokenizer.GetTerminal();
 
                         if (XamlTerminal.CloseAngleBracket != temp)

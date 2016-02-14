@@ -38,7 +38,11 @@ namespace UnitTests.CorrectXaml
         [TestMethod]
         public void TestMethod2()
         {
-            var text = "<core:ContentPage x:Class=\"LibraProgramming.Sample.Views.MainPage\" x:Uid=\"MainPage\" xmlns=\"http://schemas.microsoft.com/winfx/2006/xaml/presentation\" xmlns:x=\"http://schemas.microsoft.com/winfx/2006/xaml\" xmlns:d=\"http://schemas.microsoft.com/expression/blend/2008\" xmlns:mc=\"http://schemas.openxmlformats.org/markup-compatibility/2006\" xmlns:core=\"using:LibraProgramming.Sample.Core\" xmlns:views=\"using:LibraProgramming.Sample.Views\" xmlns:t=\"using:LibraProgramming.Windows.UI.Xaml.StateTriggers\" mc:Ignorable=\"d\" DataContext=\"{Binding Path=MainPageViewModel, Source={StaticResource ViewModelLocator}}\" Loaded=\"OnLoaded\">";
+            var text =
+                @"<Application x:Class = ""LibraProgramming.Sample.App"" xmlns = ""http://schemas.microsoft.com/winfx/2006/xaml/presentation"" xmlns:x = ""http://schemas.microsoft.com/winfx/2006/xaml"" xmlns:vm = ""using:LibraProgramming.Sample.ViewModels"" xmlns:xaml = ""using:LibraProgramming.Sample.UI.Xaml"" RequestedTheme = ""Dark"">" +
+                "    <Application.Resources>" +
+                "    </Application.Resources>" +
+                "</Application>";
             var builder = new StringBuilder();
             var visitor = new StylerNodeVisitor(builder);
 

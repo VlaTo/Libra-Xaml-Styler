@@ -26,6 +26,11 @@ namespace LibraProgramming.Xaml.Visitors
 
             base.VisitOpenTag(node);
 
+            if (0 == node.Children.Count)
+            {
+                builder.Append('/');
+            }
+
             builder.Append('>');
         }
 
@@ -50,6 +55,25 @@ namespace LibraProgramming.Xaml.Visitors
             }
 
             base.VisitNodeAttribute(attribute);
+        }
+
+        protected override void VisitCloseTag(IXamlNode node)
+        {
+            base.VisitCloseTag(node);
+
+            if (0 == node.Children.Count)
+            {
+                return;
+            }
+
+            builder.Append('<').Append('/');
+
+            if (!String.IsNullOrEmpty(node.Prefix))
+            {
+                builder.Append(node.Prefix).Append(':');
+            }
+
+            builder.Append(node.Name).Append('>');
         }
     }
 }

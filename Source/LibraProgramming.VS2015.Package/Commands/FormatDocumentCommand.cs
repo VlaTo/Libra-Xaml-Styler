@@ -4,8 +4,6 @@ using System.IO;
 using System.Text;
 using EnvDTE;
 using LibraProgramming.Xaml;
-using LibraProgramming.Xaml.Core;
-using LibraProgramming.Xaml.Parsing;
 using LibraProgramming.Xaml.Visitors;
 
 namespace LibraProgramming.VS2015.Package.Commands

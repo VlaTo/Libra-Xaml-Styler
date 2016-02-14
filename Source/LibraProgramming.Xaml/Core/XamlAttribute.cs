@@ -18,7 +18,7 @@ namespace LibraProgramming.Xaml.Core
             {
                 if (null != node)
                 {
-                    throw new XamlParsingException();
+                    throw new XamlParsingException("");
                 }
 
                 if (null == value)
