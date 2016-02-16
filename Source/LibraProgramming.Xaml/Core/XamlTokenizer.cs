@@ -38,6 +38,8 @@ namespace LibraProgramming.Xaml.Core
         Dot,
         Colon,
         Quote,
+        Exclamation,
+        Dash,
         Unknown = Int32.MaxValue
     }
 
@@ -79,7 +81,7 @@ namespace LibraProgramming.Xaml.Core
                 return term;
             }
 
-            throw new Exception();
+            throw new TokenizerException(this, "");
         }
 
         public XamlTerminal GetAlphaNumericString(out string str)
@@ -100,7 +102,7 @@ namespace LibraProgramming.Xaml.Core
                 {
                     if (0 == name.Length)
                     {
-                        throw new Exception();
+                        throw new TokenizerException(this, "");
                     }
 
                     name.Append((char) current);
@@ -123,9 +125,7 @@ namespace LibraProgramming.Xaml.Core
                     return term;
                 }
 
-                var position = GetSourcePosition();
-
-                throw new TokenizerException(position.LineNumber, position.CharPosition);
+                throw new TokenizerException(this, "");
             }
 
             return XamlTerminal.EOF;
@@ -195,6 +195,18 @@ namespace LibraProgramming.Xaml.Core
                 case '\"':
                 {
                     term = XamlTerminal.Quote;
+                    return true;
+                }
+
+                case '!':
+                {
+                    term = XamlTerminal.Exclamation;
+                    return true;
+                }
+
+                case '-':
+                {
+                    term = XamlTerminal.Dash;
                     return true;
                 }
 

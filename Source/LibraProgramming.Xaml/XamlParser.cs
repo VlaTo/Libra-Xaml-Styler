@@ -47,9 +47,10 @@ namespace LibraProgramming.Xaml
                     return node;
                 }
             }
-            catch (Exception exception)
+            catch (TokenizerException exception)
             {
-                throw new XamlParsingException("", exception);
+                var position = exception.Tokenizer.GetSourcePosition();
+                throw new XamlParsingException(position.LineNumber, position.CharPosition, "", exception);
             }
         }
 
@@ -81,7 +82,8 @@ namespace LibraProgramming.Xaml
                         break;
 
                     default:
-                        throw new XamlParsingException("");
+                        var position = tokenizer.GetSourcePosition();
+                        throw new XamlParsingException(position.LineNumber, position.CharPosition, "");
                 }
             }
            
@@ -96,21 +98,46 @@ namespace LibraProgramming.Xaml
 
             if (null == nodeName)
             {
-                if (XamlTerminal.Slash != term)
+                switch (term)
                 {
-                    throw new XamlParsingException("");
+                    case XamlTerminal.Slash:
+                    {
+                        term = ParseNodeName(out nodeName);
+
+                        if (XamlTerminal.CloseAngleBracket == term)
+                        {
+                            EsureClosingNode(queue, nodeName);
+                            return term;
+                        }
+
+                        break;
+                    }
+
+                    case XamlTerminal.Exclamation:
+                    {
+                        term = ParseComment();
+
+                        return term;
+                    }
+                }
+
+                /*if (XamlTerminal.Slash != term)
+                {
+                    var position = tokenizer.GetSourcePosition();
+                    throw new XamlParsingException(position.LineNumber, position.CharPosition, "");
                 }
 
                 term = ParseNodeName(out nodeName);
 
                 if (XamlTerminal.CloseAngleBracket != term)
                 {
-                    throw new XamlParsingException("");
+                    var position = tokenizer.GetSourcePosition();
+                    throw new XamlParsingException(position.LineNumber, position.CharPosition, "");
                 }
 
                 EsureClosingNode(queue, nodeName);
 
-                return term;
+                return term;*/
             }
 
             var node = new XamlNode
@@ -132,7 +159,8 @@ namespace LibraProgramming.Xaml
 
                         if (XamlTerminal.Quote != term)
                         {
-                            throw new XamlParsingException("");
+                            var position = tokenizer.GetSourcePosition();
+                            throw new XamlParsingException(position.LineNumber, position.CharPosition, "");
                         }
 
                         term = tokenizer.GetTerminal();
@@ -150,7 +178,8 @@ namespace LibraProgramming.Xaml
 
                         if (XamlTerminal.CloseAngleBracket != term)
                         {
-                            throw new XamlParsingException("");
+                            var position = tokenizer.GetSourcePosition();
+                            throw new XamlParsingException(position.LineNumber, position.CharPosition, "");
                         }
 
                         node.IsInline = true;
@@ -159,7 +188,10 @@ namespace LibraProgramming.Xaml
                     }
 
                     default:
-                        throw new XamlParsingException("");
+                    {
+                        var position = tokenizer.GetSourcePosition();
+                        throw new XamlParsingException(position.LineNumber, position.CharPosition, "");
+                    }
                 }
             }
         }
@@ -193,7 +225,8 @@ namespace LibraProgramming.Xaml
                     case XamlTerminal.Equal:
                         if (hasequal)
                         {
-                            throw new XamlParsingException("");
+                            var position = tokenizer.GetSourcePosition();
+                            throw new XamlParsingException(position.LineNumber, position.CharPosition, "");
                         }
 
                         hasequal = true;
@@ -241,7 +274,9 @@ namespace LibraProgramming.Xaml
                             continue;
                         }
 
-                        throw new XamlParsingException("");
+                        var position = tokenizer.GetSourcePosition();
+
+                        throw new XamlParsingException(position.LineNumber, position.CharPosition, "");
 
                     case XamlTerminal.Dot:
                         name.Append(str).Append('.');
@@ -288,9 +323,34 @@ namespace LibraProgramming.Xaml
 
                         return term;
 
+                    case XamlTerminal.Exclamation:
+                        return term;
+
                     default:
                         throw new Exception();
                 }
+            }
+        }
+
+        private XamlTerminal ParseComment(ICollection<string> lines)
+        {
+            var term = tokenizer.GetTerminal();
+
+            if (XamlTerminal.Dash != term)
+            {
+                return term;
+            }
+
+            term = tokenizer.GetTerminal();
+
+            if (XamlTerminal.Dash != term)
+            {
+                return term;
+            }
+
+            while (true)
+            {
+                var current
             }
         }
 
@@ -298,7 +358,8 @@ namespace LibraProgramming.Xaml
         {
             if (0 >= queue.Count)
             {
-                throw new XamlParsingException("");
+                var position = tokenizer.GetSourcePosition();
+                throw new XamlParsingException(position.LineNumber, position.CharPosition, "");
             }
 
             var node = queue.Peek();
@@ -309,7 +370,9 @@ namespace LibraProgramming.Xaml
                 return;
             }
 
-            throw new XamlParsingException("");
+            var p = tokenizer.GetSourcePosition();
+
+            throw new XamlParsingException(p.LineNumber, p.CharPosition, "");
         }
     }
 }

@@ -39,9 +39,10 @@ namespace UnitTests.CorrectXaml
         public void TestMethod2()
         {
             var text =
-                @"<Application x:Class = ""LibraProgramming.Sample.App"" xmlns = ""http://schemas.microsoft.com/winfx/2006/xaml/presentation"" xmlns:x = ""http://schemas.microsoft.com/winfx/2006/xaml"" xmlns:vm = ""using:LibraProgramming.Sample.ViewModels"" xmlns:xaml = ""using:LibraProgramming.Sample.UI.Xaml"" RequestedTheme = ""Dark"">" +
-                "    <Application.Resources>" +
-                "    </Application.Resources>" +
+                "<Application x:Class = \"LibraProgramming.Sample.App\" xmlns = \"http://schemas.microsoft.com/winfx/2006/xaml/presentation\" xmlns:x = \"http://schemas.microsoft.com/winfx/2006/xaml\" xmlns:vm = \"using:LibraProgramming.Sample.ViewModels\" xmlns:xaml = \"using:LibraProgramming.Sample.UI.Xaml\" RequestedTheme = \"Dark\">\n" +
+                "    <Application.Resources>\n" +
+                "        some text" +
+                "    </Application.Resources>\n" +
                 "</Application>";
             var builder = new StringBuilder();
             var visitor = new StylerNodeVisitor(builder);

@@ -2,14 +2,9 @@
 
 namespace LibraProgramming.Xaml.Core
 {
-    public class TokenizerException : Exception
+    internal class TokenizerException : Exception
     {
-         public int LineNumber
-         {
-             get;
-         }
-
-        public int Positiion
+        public XamlTokenizer Tokenizer
         {
             get;
         }
@@ -17,10 +12,10 @@ namespace LibraProgramming.Xaml.Core
         /// <summary>
         /// Выполняет инициализацию нового экземпляра класса <see cref="T:System.Exception"/>, используя указанное сообщение об ошибке.
         /// </summary>
-        public TokenizerException(int lineNumber, int positiion)
+        public TokenizerException(XamlTokenizer tokenizer, string message)
+            : base(message)
         {
-            LineNumber = lineNumber;
-            Positiion = positiion;
+            Tokenizer = tokenizer;
         }
     }
 }
