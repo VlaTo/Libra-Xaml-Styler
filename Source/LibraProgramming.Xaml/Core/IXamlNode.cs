@@ -24,6 +24,11 @@ namespace LibraProgramming.Xaml.Core
             get;
         }
 
+        bool IsInline
+        {
+            get;
+        }
+
         IReadOnlyCollection<IXamlAttribute> Attributes
         {
             get;

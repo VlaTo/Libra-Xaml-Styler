@@ -48,6 +48,7 @@
   <ItemGroup>
     <Compile Include="Core\IXamlAttribute.cs" />
     <Compile Include="Core\IXamlNode.cs" />
+    <Compile Include="Core\ParserException.cs" />
     <Compile Include="Core\TokenizerException.cs" />
     <Compile Include="Core\XamlParsingException.cs" />
     <Compile Include="Core\XamlAttribute.cs" />

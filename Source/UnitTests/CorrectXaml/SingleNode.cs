@@ -1,4 +1,6 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Diagnostics;
+using System.Linq;
 using System.Text;
 using LibraProgramming.Xaml.Visitors;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -12,13 +14,30 @@ namespace UnitTests.CorrectXaml
         [TestMethod]
         public void Simple()
         {
-            const string tag = "Application";
-            var node = XamlParser.Parse('<' + tag + '>');
+            const string tag = "test";
 
-            Assert.IsNotNull(node);
-            Assert.AreEqual(tag, node.Name);
-            Assert.AreEqual(0, node.Children.Count);
-            Assert.AreEqual(0, node.Attributes.Count);
+            var samples = new[]
+            {
+                "<" + tag + ">",
+                "<" + tag + " " + ">",
+                " " + "<" + tag + ">",
+                " " + "<" + tag + " " + ">"
+            };
+
+            foreach (var sample in samples)
+            {
+                var root = XamlParser.Parse(sample);
+
+                Assert.IsNotNull(root);
+                Assert.AreEqual(1, root.Children.Count, $"Sample: \'{sample}\'");
+
+                var node = root.Children.First();
+
+                Assert.AreEqual(tag, node.Name);
+                Assert.IsFalse(node.IsInline);
+                Assert.AreEqual(String.Empty, node.Prefix);
+                Assert.AreEqual(0, root.Attributes.Count);
+            }
         }
 
         [TestMethod]
