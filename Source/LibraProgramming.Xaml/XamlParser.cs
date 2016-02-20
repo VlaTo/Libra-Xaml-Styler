@@ -41,10 +41,14 @@ namespace LibraProgramming.Xaml
             {
                 using (var tokenizer = new XamlTokenizer(reader))
                 {
-                    var parser = new XamlParser(tokenizer);
-                    var node = parser.Parse();
+                    var root = new XamlRootNode();
+                    var stack = new Stack<XamlNode>();
 
-                    return node;
+                    stack.Push(root);
+
+                    new XamlParser(tokenizer).Parse(stack);
+
+                    return root;
                 }
             }
             catch (TokenizerException exception)
@@ -54,40 +58,233 @@ namespace LibraProgramming.Xaml
             }
         }
 
-        private XamlNode Parse()
+        private enum ParserState
         {
-            var root = new XamlRootNode();
-            var queue = new Stack<XamlNode>();
-            var done = false;
+            Begin,
+            OpenAngleBracket,
+            NodeTag,
+            NodeName,
+            Slash,
+            InlinedCloseAngleBracket,
+            CloseAngleBracket,
+            End,
+            Asterisk,
+            Text,
+            NodeAttribute
+        }
 
-            queue.Push(root);
+        private void Parse(Stack<XamlNode> stack)
+        {
+            var buffer = new StringBuilder();
+            string prefix = null;
+            string name = null;
+            string value = null;
 
-            while (!done)
+            var state = ParserState.Begin;
+            var on = true;
+
+            while (on)
             {
-                var term = tokenizer.GetTerminal();
-
-                switch (term)
+                switch (state)
                 {
-                    case XamlTerminal.Whitespace:
-                        continue;
-
-                    case XamlTerminal.OpenAngleBracket:
+                    case ParserState.Begin:
                     {
-                        var temp = ParseNode(queue);
+                        var current = tokenizer.ReadNextChar();
+
+                        switch (current)
+                        {
+                            case '<':
+                            {
+                                state = ParserState.OpenAngleBracket;
+                                buffer.Append((char) current);
+
+                                break;
+                            }
+
+                            case -1:
+                            {
+                                on = false;
+                                break;
+                            }
+
+                            default:
+                            {
+                                break;
+                            }
+                        }
+
                         break;
                     }
 
-                    case XamlTerminal.EOF:
-                        done = true;
-                        break;
+                    case ParserState.OpenAngleBracket:
+                    {
+                        var current = tokenizer.ReadNextChar();
 
-                    default:
+                        switch (current)
+                        {
+                            case '!':
+                            {
+                                state = ParserState.Asterisk;
+                                buffer.Clear();
+
+                                continue;
+                            }
+
+                            case -1:
+                            {
+                                on = false;
+                                continue;
+                            }
+
+                            default:
+                            {
+                                if (Char.IsLetter((char) current) || '_' == current)
+                                {
+                                    state = ParserState.NodeTag;
+                                    buffer.Clear();
+                                    buffer.Append((char) current);
+
+                                    continue;
+                                }
+
+                                state = ParserState.Text;
+
+                                break;
+                            }
+                        }
+
+                        break;
+                    }
+
+                    case ParserState.NodeTag:
+                    {
+                        var current = tokenizer.ReadNextChar();
+
+                        switch (current)
+                        {
+                            case ':':
+                            {
+                                state = ParserState.NodeName;
+                                prefix = buffer.ToString();
+                                buffer.Clear();
+
+                                continue;
+                            }
+
+                            case '/':
+                            {
+                                if (0 >= buffer.Length)
+                                {
+                                    var position = tokenizer.GetSourcePosition();
+                                    throw new XamlParsingException(position.LineNumber, position.CharPosition, "");
+                                }
+
+                                name = buffer.ToString();
+                                state = ParserState.Slash;
+
+                                buffer.Clear();
+
+                                continue;
+                            }
+
+                            case '>':
+                            {
+                                if (0 >= buffer.Length)
+                                {
+                                    var position = tokenizer.GetSourcePosition();
+                                    throw new XamlParsingException(position.LineNumber, position.CharPosition, "");
+                                }
+
+                                name = buffer.ToString();
+                                state = ParserState.CloseAngleBracket;
+
+                                buffer.Clear();
+
+                                continue;
+                            }
+
+                            default:
+                            {
+                                if (Char.IsLetter((char) current) || Char.IsDigit((char) current) || '_' == current)
+                                {
+                                    buffer.Append((char) current);
+                                    continue;
+                                }
+
+                                if (Char.IsWhiteSpace((char) current))
+                                {
+                                    if (0 >= buffer.Length)
+                                    {
+                                        var p = tokenizer.GetSourcePosition();
+                                        throw new XamlParsingException(p.LineNumber, p.CharPosition, "");
+                                    }
+
+                                    name = buffer.ToString();
+                                    state = ParserState.NodeAttribute;
+
+                                    buffer.Clear();
+
+                                    continue;
+                                }
+
+                                var position = tokenizer.GetSourcePosition();
+
+                                throw new XamlParsingException(position.LineNumber, position.CharPosition, "");
+                            }
+                        }
+                    }
+
+                    case ParserState.Slash:
+                    {
+                        var current = tokenizer.ReadNextChar();
+
+                        if ('>' == current)
+                        {
+                            state = ParserState.InlinedCloseAngleBracket;
+                            continue;
+                        }
+
                         var position = tokenizer.GetSourcePosition();
+
                         throw new XamlParsingException(position.LineNumber, position.CharPosition, "");
+                    }
+
+                    case ParserState.InlinedCloseAngleBracket:
+                    {
+                        var node = new XamlNode
+                        {
+                            Parent = stack.Peek(),
+                            Name = name,
+                            IsInline = true
+                        };
+
+                        if (!String.IsNullOrEmpty(prefix))
+                        {
+                            node.Prefix = prefix;
+                        }
+
+                        break;
+                    }
+
+                    case ParserState.CloseAngleBracket:
+                    {
+                        var node = new XamlNode
+                        {
+                            Parent = stack.Peek(),
+                            Name = name,
+                        };
+
+                        if (!String.IsNullOrEmpty(prefix))
+                        {
+                            node.Prefix = prefix;
+                        }
+
+                        stack.Push(node);
+
+                        break;
+                    }
                 }
             }
-           
-            return root.First;
         }
 
         private XamlTerminal ParseNode(Stack<XamlNode> queue)
@@ -98,6 +295,8 @@ namespace LibraProgramming.Xaml
 
             if (null == nodeName)
             {
+                var prefix = new StringBuilder();
+
                 switch (term)
                 {
                     case XamlTerminal.Slash:
@@ -110,15 +309,17 @@ namespace LibraProgramming.Xaml
                             return term;
                         }
 
+                        prefix.Append('/');
+
                         break;
                     }
 
-                    case XamlTerminal.Exclamation:
+                    /*case XamlTerminal.Exclamation:
                     {
                         term = ParseComment();
 
                         return term;
-                    }
+                    }*/
                 }
 
                 /*if (XamlTerminal.Slash != term)
@@ -348,10 +549,12 @@ namespace LibraProgramming.Xaml
                 return term;
             }
 
-            while (true)
+            /*while (true)
             {
                 var current
-            }
+            }*/
+
+            throw new NotImplementedException();
         }
 
         private void EsureClosingNode(Stack<XamlNode> queue, NodeName nodeName)
@@ -374,5 +577,13 @@ namespace LibraProgramming.Xaml
 
             throw new XamlParsingException(p.LineNumber, p.CharPosition, "");
         }
+
+        /*private static class Throw
+        {
+            internal static void ParsingError()
+            {
+                throw new XamlParsingException();
+            }
+        }*/
     }
 }

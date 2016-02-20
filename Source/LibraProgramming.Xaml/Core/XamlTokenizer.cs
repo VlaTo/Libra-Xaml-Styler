@@ -251,7 +251,7 @@ namespace LibraProgramming.Xaml.Core
             }
         }
 
-        private int ReadNextChar()
+        public int ReadNextChar()
         {
             var current = reader.Read();
 
