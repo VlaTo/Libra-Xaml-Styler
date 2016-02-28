@@ -173,73 +173,87 @@ namespace LibraProgramming.Xaml
                     {
                         var current = tokenizer.ReadNextChar();
 
-                        switch (current)
+                        if (-1 == current)
                         {
-                            case ':':
+                            break;
+                        }
+
+                        var symbol = (char) current;
+
+                        if (Char.IsLetter(symbol) || Char.IsDigit(symbol) || '_' == symbol)
+                        {
+                            buffer.Append(symbol);
+                            continue;
+                        }
+
+                        if (Char.IsWhiteSpace(symbol))
+                        {
+                            state = ParserState.FindAttribute;
+                            name = buffer.ToString();
+
+                            buffer.Clear();
+                        }
+                        else
+                        {
+                            switch (current)
                             {
-                                if (0 == buffer.Length || false == String.IsNullOrEmpty(prefix))
+                                case ':':
                                 {
-                                    throw new ParserException();
-                                }
+                                    if (0 == buffer.Length || false == String.IsNullOrEmpty(prefix))
+                                    {
+                                        throw new ParserException();
+                                    }
 
-                                prefix = buffer.ToString();
-                                buffer.Clear();
-
-                                continue;
-                            }
-
-                            case '/':
-                            {
-                                if (0 == buffer.Length)
-                                {
-                                    throw new ParserException();
-                                }
-
-                                state = ParserState.FindTagEnd;
-                                name = buffer.ToString();
-
-                                buffer.Clear();
-
-                                continue;
-                            }
-
-                            case '>':
-                            {
-                                if (0 == buffer.Length)
-                                {
-                                    throw new ParserException();
-                                }
-
-                                state = ParserState.TagEndFound;
-                                name = buffer.ToString();
-
-                                buffer.Clear();
-
-                                continue;
-                            }
-
-                            default:
-                            {
-                                var symbol = (char) current;
-
-                                if (Char.IsLetter(symbol) || Char.IsDigit(symbol) || '_' == current)
-                                {
-                                    buffer.Append(symbol);
-                                    continue;
-                                }
-
-                                if (Char.IsWhiteSpace(symbol))
-                                {
-                                    state = ParserState.FindAttribute;
-                                    name = buffer.ToString();
+                                    prefix = buffer.ToString();
                                     buffer.Clear();
 
                                     continue;
                                 }
 
-                                throw new ParserException();
+                                case '/':
+                                {
+                                    if (0 == buffer.Length)
+                                    {
+                                        throw new ParserException();
+                                    }
+
+                                    state = ParserState.FindTagEnd;
+                                    name = buffer.ToString();
+
+                                    buffer.Clear();
+
+                                    break;
+                                }
+
+                                case '>':
+                                {
+                                    if (0 == buffer.Length)
+                                    {
+                                        throw new ParserException();
+                                    }
+
+                                    state = ParserState.TagEndFound;
+                                    name = buffer.ToString();
+
+                                    buffer.Clear();
+
+                                    break;
+                                }
                             }
                         }
+
+                        var node = new XamlNode
+                        {
+                            Parent = stack.Peek(),
+                            Name = name
+                        };
+
+                        if (!String.IsNullOrEmpty(prefix))
+                        {
+                            node.Prefix = prefix;
+                        }
+
+                        break;
                     }
 
                     case ParserState.CloseNodeName:

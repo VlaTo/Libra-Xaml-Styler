@@ -10,8 +10,8 @@ namespace UnitTests.Incorrect
         [TestMethod]
         public void TestMethod1()
         {
-//            var node = XamlParser.Parse(" <test />");
-            var node = XamlParser.Parse(" </test >");
+            var node = XamlParser.Parse(" <test:Application />");
+//            var node = XamlParser.Parse(" </test >");
 
             Assert.IsNotNull(node);
         }
