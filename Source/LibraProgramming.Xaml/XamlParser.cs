@@ -61,28 +61,30 @@ namespace LibraProgramming.Xaml
         private enum ParserState
         {
             Begin,
-            OpenAngleBracket,
-            NodeTag,
+            XamlNodeStart,
+            XamlNodeOpenTag,
             NodeName,
-            FindTagEnd,
-            InlinedTagEndFound,
+            XamlNodeOpenTagInlinedEnd,
+            XamlNodeOpenTagEnd,
             TagEndFound,
             End,
             Asterisk,
             Text,
             SearchAttribute,
-            CloseNodeTag,
+            XamlNodeEndTag,
             CloseNodeName,
             CloseNodePrefix,
             FindCloseTagEnd,
             CloseTagEndFound,
-            FindAttribute,
-            AttributeFound
+            XamlNodeAttributeStart,
+            AttributeFound,
+            XamlNodeOpenTagPrefix
         }
 
         private void Parse(Stack<XamlNode> stack)
         {
             var buffer = new StringBuilder();
+            var isinlined = false;
             string prefix = null;
             string name = null;
             string value = null;
@@ -102,9 +104,7 @@ namespace LibraProgramming.Xaml
                         {
                             case '<':
                             {
-                                state = ParserState.OpenAngleBracket;
-                                buffer.Append((char) current);
-
+                                state = ParserState.XamlNodeStart;
                                 continue;
                             }
 
@@ -116,16 +116,29 @@ namespace LibraProgramming.Xaml
 
                             default:
                             {
-                                break;
+                                continue;
                             }
                         }
-
-                        break;
                     }
 
-                    case ParserState.OpenAngleBracket:
+                    case ParserState.XamlNodeStart:
                     {
                         var current = tokenizer.ReadNextChar();
+
+                        if (-1 == current)
+                        {
+                            on = false;
+                            continue;
+                        }
+
+                        if (Char.IsLetter((char) current) || '_' == current)
+                        {
+                            state = ParserState.XamlNodeOpenTag;
+                            buffer.Clear();
+                            buffer.Append((char) current);
+
+                            continue;
+                        }
 
                         switch (current)
                         {
@@ -139,7 +152,7 @@ namespace LibraProgramming.Xaml
 
                             case '/':
                             {
-                                state = ParserState.CloseNodeTag;
+                                state = ParserState.XamlNodeEndTag;
                                 buffer.Clear();
 
                                 continue;
@@ -153,14 +166,6 @@ namespace LibraProgramming.Xaml
 
                             default:
                             {
-                                if (Char.IsLetter((char) current) || '_' == current)
-                                {
-                                    state = ParserState.NodeTag;
-                                    buffer.Clear();
-                                    buffer.Append((char) current);
-
-                                    continue;
-                                }
 
                                 state = ParserState.Text;
 
@@ -169,7 +174,7 @@ namespace LibraProgramming.Xaml
                         }
                     }
 
-                    case ParserState.NodeTag:
+                    case ParserState.XamlNodeOpenTag:
                     {
                         var current = tokenizer.ReadNextChar();
 
@@ -188,7 +193,7 @@ namespace LibraProgramming.Xaml
 
                         if (Char.IsWhiteSpace(symbol))
                         {
-                            state = ParserState.FindAttribute;
+                            state = ParserState.XamlNodeAttributeStart;
                             name = buffer.ToString();
 
                             buffer.Clear();
@@ -199,13 +204,9 @@ namespace LibraProgramming.Xaml
                             {
                                 case ':':
                                 {
-                                    if (0 == buffer.Length || false == String.IsNullOrEmpty(prefix))
-                                    {
-                                        throw new ParserException();
-                                    }
-
-                                    prefix = buffer.ToString();
-                                    buffer.Clear();
+                                    state = ParserState.XamlNodeOpenTagPrefix;
+//                                    prefix = buffer.ToString();
+//                                    buffer.Clear();
 
                                     continue;
                                 }
@@ -217,7 +218,7 @@ namespace LibraProgramming.Xaml
                                         throw new ParserException();
                                     }
 
-                                    state = ParserState.FindTagEnd;
+                                    state = ParserState.XamlNodeOpenTagInlinedEnd;
                                     name = buffer.ToString();
 
                                     buffer.Clear();
@@ -232,7 +233,7 @@ namespace LibraProgramming.Xaml
                                         throw new ParserException();
                                     }
 
-                                    state = ParserState.TagEndFound;
+                                    state = ParserState.XamlNodeOpenTagEnd;
                                     name = buffer.ToString();
 
                                     buffer.Clear();
@@ -254,6 +255,38 @@ namespace LibraProgramming.Xaml
                         }
 
                         break;
+                    }
+
+                    case ParserState.XamlNodeOpenTagPrefix:
+                    {
+                        if (false == String.IsNullOrEmpty(prefix))
+                        {
+                            throw new ParserException();
+                        }
+
+                        state = ParserState.XamlNodeOpenTag;
+                        prefix = buffer.ToString();
+                        buffer.Clear();
+
+                        continue;
+                    }
+
+                    case ParserState.XamlNodeOpenTagInlinedEnd:
+                    {
+                        var current = tokenizer.ReadNextChar();
+
+                        if ('>' != current)
+                        {
+                            throw new ParserException();
+                        }
+
+                        state = ParserState.XamlNodeOpenTagEnd;
+
+                        var parent = stack.Peek();
+
+                        parent.LastChild.IsInline = true;
+
+                        continue;
                     }
 
                     case ParserState.CloseNodeName:
@@ -297,20 +330,7 @@ namespace LibraProgramming.Xaml
                         break;
                     }
 
-                    case ParserState.FindTagEnd:
-                    {
-                        var current = tokenizer.ReadNextChar();
-
-                        if ('>' == current)
-                        {
-                            state = ParserState.InlinedTagEndFound;
-                            continue;
-                        }
-
-                        throw new ParserException();
-                    }
-
-                    case ParserState.InlinedTagEndFound:
+                    case ParserState.XamlNodeOpenTagEnd:
                     {
                         var node = new XamlNode
                         {
@@ -349,7 +369,7 @@ namespace LibraProgramming.Xaml
                         continue;
                     }
 
-                    case ParserState.FindAttribute:
+                    case ParserState.XamlNodeAttributeStart:
                     {
                         var current = tokenizer.ReadNextChar();
 
@@ -357,7 +377,7 @@ namespace LibraProgramming.Xaml
                         {
                             case '/':
                             {
-                                state = ParserState.FindTagEnd;
+                                state = ParserState.XamlNodeOpenTagInlinedEnd;
                                 continue;
                             }
 
@@ -387,7 +407,7 @@ namespace LibraProgramming.Xaml
                         }
                     }
 
-                    /*case ParserState.CloseNodeTag:
+                    /*case ParserState.XamlNodeEndTag:
                     {
                         var current = tokenizer.ReadNextChar();
 
@@ -492,7 +512,7 @@ namespace LibraProgramming.Xaml
                     }*/
                 }
 
-                /*if (XamlTerminal.FindTagEnd != term)
+                /*if (XamlTerminal.XamlNodeOpenTagInlinedEnd != term)
                 {
                     var position = tokenizer.GetSourcePosition();
                     throw new XamlParsingException(position.LineNumber, position.CharPosition, "");

@@ -125,9 +125,9 @@ namespace LibraProgramming.Xaml.Core
             set;
         }
 
-        public XamlNode First => Children.FirstOrDefault();
+        public XamlNode FirstChild => Children.FirstOrDefault();
 
-        public XamlNode Last => Children.LastOrDefault();
+        public XamlNode LastChild => Children.LastOrDefault();
 
         IReadOnlyCollection<IXamlAttribute> IXamlNode.Attributes => Attributes;
 
