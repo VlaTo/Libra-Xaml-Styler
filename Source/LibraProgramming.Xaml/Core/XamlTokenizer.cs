@@ -1,46 +1,52 @@
 ﻿using System;
-using System.CodeDom;
 using System.IO;
 using System.Text;
 
 namespace LibraProgramming.Xaml.Core
 {
-    internal struct SourcePosition
+    /// <summary>
+    /// 
+    /// </summary>
+    internal enum XamlTokenType
     {
-        public int LineNumber
-        {
-            get;
-        }
-
-        public int CharPosition
-        {
-            get;
-        }
-
-        public SourcePosition(int lineNumber, int charPosition)
-        {
-            LineNumber = lineNumber;
-            CharPosition = charPosition;
-        }
+        Terminal
     }
 
     /// <summary>
     /// 
     /// </summary>
-    internal enum XamlTerminal
+    internal class XamlToken
     {
-        EOF = -1,
-        OpenAngleBracket,
-        Whitespace,
-        Equal,
-        CloseAngleBracket,
-        Slash,
-        Dot,
-        Colon,
-        Quote,
-        Exclamation,
-        Dash,
-        Unknown = Int32.MaxValue
+        public XamlTokenType TokenType
+        {
+            get;
+        }
+
+        public string Token
+        {
+            get;
+        }
+
+        public uint LineNumber
+        {
+            get;
+        }
+
+        public uint Position
+        {
+            get;
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="T:System.Object"/> class.
+        /// </summary>
+        public XamlToken(XamlTokenType tokenType, string token, uint lineNumber, uint position)
+        {
+            TokenType = tokenType;
+            Token = token;
+            LineNumber = lineNumber;
+            Position = position;
+        }
     }
 
     /// <summary>
@@ -50,8 +56,9 @@ namespace LibraProgramming.Xaml.Core
     {
         private readonly TextReader reader;
         private bool disposed;
-        private int lineNumber;
-        private int charPosition;
+        private uint lineNumber;
+        private uint charPosition;
+        private TokenizerState state;
 
         public XamlTokenizer(TextReader reader)
         {
@@ -59,6 +66,7 @@ namespace LibraProgramming.Xaml.Core
 
             lineNumber = 1;
             charPosition = 1;
+            state = TokenizerState.Begin;
         }
 
         public void Dispose()
@@ -66,24 +74,76 @@ namespace LibraProgramming.Xaml.Core
             Dispose(true);
         }
 
-        public SourcePosition GetSourcePosition()
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        public XamlToken ReadNextToken()
         {
-            return new SourcePosition(lineNumber, charPosition);
-        }
+            var on = true;
 
-        public XamlTerminal GetTerminal()
-        {
-            XamlTerminal term;
-            var current = ReadNextChar();
-
-            if (ClassifyTerminal(current, out term))
+            while (on)
             {
-                return term;
+                var current = ReadNextChar();
+
+                switch (state)
+                {
+                    case TokenizerState.Begin:
+                    {
+                        on = false;
+                        break;
+                    }
+                }
             }
 
-            throw new TokenizerException(this, "");
+            return new XamlToken(
+                XamlTokenType.Terminal,
+                '<'.ToString(),
+                lineNumber,
+                charPosition);
         }
 
+        private void Dispose(bool dispose)
+        {
+            if (disposed)
+            {
+                return;
+            }
+
+            try
+            {
+                if (dispose)
+                {
+                    reader.Dispose();
+                }
+            }
+            finally
+            {
+                disposed = true;
+            }
+        }
+
+        private int ReadNextChar()
+        {
+            var current = reader.Read();
+
+            if (-1 != current)
+            {
+                if ('\n' == (char) current)
+                {
+                    lineNumber++;
+                    charPosition = 1;
+                }
+                else if ('\r' != (char) current)
+                {
+                    charPosition++;
+                }
+            }
+
+            return current;
+        }
+
+/*
         public XamlTerminal GetAlphaNumericString(out string str)
         {
             var name = new StringBuilder();
@@ -130,145 +190,11 @@ namespace LibraProgramming.Xaml.Core
 
             return XamlTerminal.EOF;
         }
+*/
 
-        public XamlTerminal GetAttributeValueString(StringBuilder builder)
+        private enum TokenizerState
         {
-            while (true)
-            {
-                var current = ReadNextChar();
-
-                switch (current)
-                {
-                    case '\"':
-                        return XamlTerminal.Quote;
-
-                    case -1:
-                        return XamlTerminal.EOF;
-
-                    default:
-                        builder.Append((char) current);
-                        break;
-                }
-            }
-        }
-
-        private static bool ClassifyTerminal(int current, out XamlTerminal term)
-        {
-            switch (current)
-            {
-                case '<':
-                {
-                    term = XamlTerminal.OpenAngleBracket;
-                    return true;
-                }
-
-                case '=':
-                {
-                    term = XamlTerminal.Equal;
-                    return true;
-                }
-
-                case '>':
-                {
-                    term = XamlTerminal.CloseAngleBracket;
-                    return true;
-                }
-
-                case '/':
-                {
-                    term = XamlTerminal.Slash;
-                    return true;
-                }
-
-                case '.':
-                {
-                    term = XamlTerminal.Dot;
-                    return true;
-                }
-
-                case ':':
-                {
-                    term = XamlTerminal.Colon;
-                    return true;
-                }
-
-                case '\"':
-                {
-                    term = XamlTerminal.Quote;
-                    return true;
-                }
-
-                case '!':
-                {
-                    term = XamlTerminal.Exclamation;
-                    return true;
-                }
-
-                case '-':
-                {
-                    term = XamlTerminal.Dash;
-                    return true;
-                }
-
-                case -1:
-                {
-                    term = XamlTerminal.EOF;
-                    return true;
-                }
-
-                default:
-                    if (Char.IsWhiteSpace((char) current) || Char.IsControl((char) current))
-                    {
-                        term = XamlTerminal.Whitespace;
-                        return true;
-                    }
-
-                    term = XamlTerminal.Unknown;
-
-                    break;
-            }
-
-            return false;
-        }
-
-        private void Dispose(bool dispose)
-        {
-            if (disposed)
-            {
-                return;
-            }
-
-            try
-            {
-                if (dispose)
-                {
-                    reader.Dispose();
-                }
-            }
-            finally
-            {
-                disposed = true;
-            }
-        }
-
-        public int ReadNextChar()
-        {
-            var current = reader.Read();
-
-            if (-1 != current)
-            {
-                if ('\n' == (char) current)
-                {
-                    lineNumber++;
-                    charPosition = 1;
-                }
-                else if ('\r' != (char) current)
-                {
-                    charPosition++;
-                }
-            }
-
-            return current;
+            Begin
         }
     }
 }

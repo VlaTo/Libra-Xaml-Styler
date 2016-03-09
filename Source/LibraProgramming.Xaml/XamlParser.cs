@@ -58,30 +58,6 @@ namespace LibraProgramming.Xaml
             }
         }
 
-        private enum ParserState
-        {
-            Begin,
-            XamlNodeStart,
-            XamlNodeOpenTag,
-            NodeName,
-            XamlNodeOpenTagInlinedEnd,
-            XamlNodeOpenTagEnd,
-            TagEndFound,
-            End,
-            Asterisk,
-            Text,
-            SearchAttribute,
-            XamlNodeEndTag,
-            CloseNodeName,
-            CloseNodePrefix,
-            FindCloseTagEnd,
-            CloseTagEndFound,
-            XamlNodeAttributeStart,
-            AttributeFound,
-            XamlNodeOpenTagPrefix,
-            XamlNodeNameStart
-        }
-
         private void Parse(Stack<XamlNode> stack)
         {
             var buffer = new StringBuilder();
@@ -98,9 +74,9 @@ namespace LibraProgramming.Xaml
                 {
                     case ParserState.Begin:
                     {
-                        var current = tokenizer.ReadNextChar();
+                        var token = tokenizer.ReadNextToken();
 
-                        switch (current)
+                        switch (token.TokenType)
                         {
                             case '<':
                             {
@@ -798,5 +774,29 @@ namespace LibraProgramming.Xaml
                 throw new XamlParsingException();
             }
         }*/
+
+        private enum ParserState
+        {
+            Begin,
+            XamlNodeStart,
+            XamlNodeOpenTag,
+            NodeName,
+            XamlNodeOpenTagInlinedEnd,
+            XamlNodeOpenTagEnd,
+            TagEndFound,
+            End,
+            Asterisk,
+            Text,
+            SearchAttribute,
+            XamlNodeEndTag,
+            CloseNodeName,
+            CloseNodePrefix,
+            FindCloseTagEnd,
+            CloseTagEndFound,
+            XamlNodeAttributeStart,
+            AttributeFound,
+            XamlNodeOpenTagPrefix,
+            XamlNodeNameStart
+        }
     }
 }
