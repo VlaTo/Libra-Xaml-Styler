@@ -7,10 +7,11 @@
     <ProjectGuid>{39508269-8435-4F49-AF9A-E684EAE56888}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>LibraProgramming.Xaml</RootNamespace>
-    <AssemblyName>LibraProgramming.Xaml</AssemblyName>
+    <RootNamespace>LibraProgramming.Parsing.Xaml</RootNamespace>
+    <AssemblyName>LibraProgramming.Parsing.Xaml</AssemblyName>
     <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -46,17 +47,16 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Core\IXamlAttribute.cs" />
-    <Compile Include="Core\IXamlNode.cs" />
-    <Compile Include="Core\ParserException.cs" />
-    <Compile Include="Core\TokenizerException.cs" />
-    <Compile Include="Core\XamlParsingException.cs" />
-    <Compile Include="Core\XamlAttribute.cs" />
+    <Compile Include="Core\XamlDocumentValidator.cs" />
+    <Compile Include="Core\XamlParsingContext.cs" />
+    <Compile Include="IXamlAttribute.cs" />
+    <Compile Include="IXamlNode.cs" />
+    <Compile Include="XamlParsingException.cs" />
+    <Compile Include="TokenizerException.cs" />
+    <Compile Include="XamlAttribute.cs" />
     <Compile Include="Core\XamlNamespaceDeclaration.cs" />
-    <Compile Include="Core\NodeName.cs" />
     <Compile Include="Core\XamlNamespaceResolver.cs" />
-    <Compile Include="Core\XamlNode.cs" />
-    <Compile Include="Core\XamlNodeName.cs" />
+    <Compile Include="XamlNode.cs" />
     <Compile Include="Core\XamlRootNode.cs" />
     <Compile Include="Globalization\IStringResourceLoader.cs" />
     <Compile Include="Globalization\LocalizationManager.cs" />
@@ -69,8 +69,8 @@
     <Compile Include="Visitors\StylerNodeVisitor.cs" />
     <Compile Include="Visitors\XamlNodeVisitor.cs" />
     <Compile Include="XamlParser.cs" />
-    <Compile Include="Core\SourceXamlParsingContext.cs" />
-    <Compile Include="Core\XamlTokenizer.cs" />
+    <Compile Include="StylerSettings.cs" />
+    <Compile Include="XamlTokenizer.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Localization\Neutral\Resource.resx">

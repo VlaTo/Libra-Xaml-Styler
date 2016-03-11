@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace LibraProgramming.Xaml.Core
+namespace LibraProgramming.Parsing.Xaml
 {
     internal sealed class XamlAttribute : IXamlAttribute
     {

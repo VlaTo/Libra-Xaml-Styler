@@ -1,4 +1,4 @@
-﻿namespace LibraProgramming.Xaml.Globalization
+﻿namespace LibraProgramming.Parsing.Xaml.Globalization
 {
     /// <summary>
     /// Represents a custom loader that may be used to lookup string resouces from the code.

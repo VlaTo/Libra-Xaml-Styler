@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace LibraProgramming.Xaml.Globalization
+﻿namespace LibraProgramming.Parsing.Xaml.Globalization
 {
     public abstract class LocalizationManager
     {

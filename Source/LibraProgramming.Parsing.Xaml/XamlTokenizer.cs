@@ -1,15 +1,15 @@
 ﻿using System;
 using System.IO;
-using System.Text;
 
-namespace LibraProgramming.Xaml.Core
+namespace LibraProgramming.Parsing.Xaml
 {
     /// <summary>
     /// 
     /// </summary>
     internal enum XamlTokenType
     {
-        Terminal
+        Terminal,
+        EndOfStream
     }
 
     /// <summary>
@@ -35,6 +35,14 @@ namespace LibraProgramming.Xaml.Core
         public uint Position
         {
             get;
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="T:System.Object"/> class.
+        /// </summary>
+        public XamlToken(XamlTokenType tokenType, uint lineNumber, uint position)
+            : this(tokenType, null, lineNumber, position)
+        {
         }
 
         /// <summary>
@@ -66,7 +74,7 @@ namespace LibraProgramming.Xaml.Core
 
             lineNumber = 1;
             charPosition = 1;
-            state = TokenizerState.Begin;
+            state = TokenizerState.NotStarted;
         }
 
         public void Dispose()
@@ -84,13 +92,41 @@ namespace LibraProgramming.Xaml.Core
 
             while (on)
             {
-                var current = ReadNextChar();
-
                 switch (state)
                 {
-                    case TokenizerState.Begin:
+                    case TokenizerState.EndOfStream:
                     {
-                        on = false;
+                        return new XamlToken(XamlTokenType.EndOfStream, lineNumber, charPosition);
+                    }
+
+                    case TokenizerState.NotStarted:
+                    {
+                        var current = ReadNextChar();
+
+                        if (-1 == current)
+                        {
+                            state = TokenizerState.EndOfStream;
+                            continue;
+                        }
+
+                        if (Char.IsWhiteSpace((char) current))
+                        {
+                            state = TokenizerState.HeadingWhitespaces;
+                            continue;
+                        }
+
+
+                        switch (current)
+                        {
+                            case '=':
+                            case '<':
+                            case '>':
+                            {
+                                state = TokenizerState.Terminal;
+                                return new XamlToken(XamlTokenType.Terminal, ((char) current).ToString(), lineNumber, charPosition);
+                            }
+                        }
+
                         break;
                     }
                 }
@@ -192,9 +228,15 @@ namespace LibraProgramming.Xaml.Core
         }
 */
 
+        /// <summary>
+        /// The <see cref="XamlTokenizer" /> internal states.
+        /// </summary>
         private enum TokenizerState
         {
-            Begin
+            EndOfStream = -1,
+            NotStarted,
+            HeadingWhitespaces,
+            Terminal
         }
     }
 }

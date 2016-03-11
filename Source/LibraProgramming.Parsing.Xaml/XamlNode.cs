@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 
-namespace LibraProgramming.Xaml.Core
+namespace LibraProgramming.Parsing.Xaml
 {
     internal class XamlNode : IXamlNode
     {

@@ -1,8 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using LibraProgramming.Xaml.Core;
 
-namespace LibraProgramming.Xaml.Visitors
+namespace LibraProgramming.Parsing.Xaml.Visitors
 {
     public class XamlNodeVisitor
     {

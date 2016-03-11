@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Linq;
 
-namespace LibraProgramming.Xaml.Core
+namespace LibraProgramming.Parsing.Xaml.Core
 {
     internal sealed class XamlNamespaceResolver
     {

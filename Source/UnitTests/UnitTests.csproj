@@ -52,14 +52,13 @@
     </Otherwise>
   </Choose>
   <ItemGroup>
-    <Compile Include="CorrectXaml\SingleNode.cs" />
-    <Compile Include="Incorrect\UnitTest1.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="TokenizerTestFixture.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\LibraProgramming.Xaml\LibraProgramming.Xaml.csproj">
+    <ProjectReference Include="..\LibraProgramming.Parsing.Xaml\LibraProgramming.Parsing.Xaml.csproj">
       <Project>{39508269-8435-4f49-af9a-e684eae56888}</Project>
-      <Name>LibraProgramming.Xaml</Name>
+      <Name>LibraProgramming.Parsing.Xaml</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup />

@@ -1,16 +1,17 @@
 ﻿using System;
 using System.Text;
-using LibraProgramming.Xaml.Core;
 
-namespace LibraProgramming.Xaml.Visitors
+namespace LibraProgramming.Parsing.Xaml.Visitors
 {
     public class StylerNodeVisitor : XamlNodeVisitor
     {
         private readonly StringBuilder builder;
+        private readonly StylerSettings settings;
 
-        public StylerNodeVisitor(StringBuilder builder)
+        public StylerNodeVisitor(StringBuilder builder, StylerSettings settings)
         {
             this.builder = builder;
+            this.settings = settings;
         }
 
         protected override void VisitOpenTag(IXamlNode node)

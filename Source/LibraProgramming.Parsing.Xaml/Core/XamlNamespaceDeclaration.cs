@@ -1,4 +1,4 @@
-﻿namespace LibraProgramming.Xaml.Core
+﻿namespace LibraProgramming.Parsing.Xaml.Core
 {
     public class XamlNamespaceDeclaration
     {

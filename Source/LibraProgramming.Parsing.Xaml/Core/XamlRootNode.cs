@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-
-namespace LibraProgramming.Xaml.Core
+﻿namespace LibraProgramming.Parsing.Xaml.Core
 {
     internal class XamlRootNode: XamlNode
     {

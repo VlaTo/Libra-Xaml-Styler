@@ -1,39 +1,63 @@
 ﻿using System.Collections.Generic;
 
-namespace LibraProgramming.Xaml.Core
+namespace LibraProgramming.Parsing.Xaml
 {
+    /// <summary>
+    /// 
+    /// </summary>
     public interface IXamlNode
     {
+        /// <summary>
+        /// 
+        /// </summary>
         string BaseURI
         {
             get;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
         string Name
         {
             get;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
         IXamlNode Parent
         {
             get;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
         string Prefix
         {
             get;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
         bool IsInline
         {
             get;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
         IReadOnlyCollection<IXamlAttribute> Attributes
         {
             get;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
         IReadOnlyCollection<IXamlNode> Children
         {
             get;
