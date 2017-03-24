@@ -18,7 +18,7 @@ namespace LibraProgramming.Parsing.Xaml
         /// <summary>
         /// 
         /// </summary>
-        string Name
+        XamlNodeName Name
         {
             get;
         }
@@ -34,18 +34,10 @@ namespace LibraProgramming.Parsing.Xaml
         /// <summary>
         /// 
         /// </summary>
-        string Prefix
+/*        string Prefix
         {
             get;
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        bool IsInline
-        {
-            get;
-        }
+        }*/
 
         /// <summary>
         /// 

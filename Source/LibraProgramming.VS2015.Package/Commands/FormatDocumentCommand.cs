@@ -2,9 +2,10 @@
 using System.Diagnostics;
 using System.IO;
 using System.Text;
+using System.Threading.Tasks;
 using EnvDTE;
-using LibraProgramming.Xaml;
-using LibraProgramming.Xaml.Visitors;
+using LibraProgramming.Parsing.Xaml;
+using LibraProgramming.Parsing.Xaml.Visitors;
 
 namespace LibraProgramming.VS2015.Package.Commands
 {
@@ -66,16 +67,7 @@ namespace LibraProgramming.VS2015.Package.Commands
             var linenumber = current.Line;
             var charoffset = current.LineCharOffset;
 
-            using (var reader = new StringReader(start.GetText(end)))
-            {
-                var text = new StringBuilder();
-                var node = XamlParser.Parse(reader);
-                var visitor = new StylerNodeVisitor(text);
-
-                visitor.Visit(node);
-
-                start.ReplaceText(end, text.ToString(), 0);
-            }
+            ReformatSourceAsync(start, end).Wait(TimeSpan.FromMinutes(1.0d));
 
             if (linenumber <= textDocument.EndPoint.Line)
             {
@@ -103,6 +95,20 @@ namespace LibraProgramming.VS2015.Package.Commands
 
                 position.EndOfDocument();
                 textDocument.Selection.MoveToPoint(position);
+            }
+        }
+
+        private static async Task ReformatSourceAsync(EditPoint start, EditPoint end)
+        {
+            using (var reader = new StringReader(start.GetText(end)))
+            {
+                var text = new StringBuilder();
+                var document = await XamlDocument.ParseAsync(reader);
+                var visitor = new StylerNodeVisitor(text, new StylerSettings());
+
+                visitor.Visit(document.Root);
+
+                start.ReplaceText(end, text.ToString(), 0);
             }
         }
     }

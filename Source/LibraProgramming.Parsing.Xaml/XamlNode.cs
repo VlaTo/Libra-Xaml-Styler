@@ -8,8 +8,7 @@ namespace LibraProgramming.Parsing.Xaml
     internal class XamlNode : IXamlNode
     {
         private XamlNode parent;
-        private string prefix;
-        private string name;
+        private XamlNodeName name;
 
         public Collection<XamlAttribute> Attributes
         {
@@ -48,17 +47,20 @@ namespace LibraProgramming.Parsing.Xaml
         {
             get
             {
-                if (String.IsNullOrEmpty(Prefix))
+                /*if (String.IsNullOrEmpty(Prefix))
                 {
                     return String.Empty;
                 }
 
                 var resolver = new XamlNamespaceResolver(this);
 
-                return resolver.GetUri(Prefix);
+                return resolver.GetUri(Prefix);*/
+
+                throw new NotImplementedException();
             }
         }
 
+/*
         public string Prefix
         {
             get
@@ -80,8 +82,9 @@ namespace LibraProgramming.Parsing.Xaml
                 prefix = value;
             }
         }
+*/
 
-        public string Name
+        public XamlNodeName Name
         {
             get
             {
@@ -103,28 +106,6 @@ namespace LibraProgramming.Parsing.Xaml
             }
         }
 
-        public string LocalName
-        {
-            get
-            {
-                for (int index = name.Length - 1; index >= 0; index--)
-                {
-                    if ('.' == name[index])
-                    {
-                        return name.Substring(index);
-                    }
-                }
-
-                return name;
-            }
-        }
-
-        public bool IsInline
-        {
-            get;
-            set;
-        }
-
         public XamlNode FirstChild => Children.FirstOrDefault();
 
         public XamlNode LastChild => Children.LastOrDefault();
@@ -137,7 +118,6 @@ namespace LibraProgramming.Parsing.Xaml
 
         public XamlNode()
         {
-            prefix = String.Empty;
             Attributes = new Collection<XamlAttribute>();
             Children = new Collection<XamlNode>();
         }

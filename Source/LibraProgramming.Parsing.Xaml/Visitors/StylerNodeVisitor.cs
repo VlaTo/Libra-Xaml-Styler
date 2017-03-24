@@ -18,10 +18,10 @@ namespace LibraProgramming.Parsing.Xaml.Visitors
         {
             builder.Append('<');
 
-            if (!String.IsNullOrEmpty(node.Prefix))
+            /*if (!String.IsNullOrEmpty(node.Prefix))
             {
                 builder.Append(node.Prefix).Append(':');
-            }
+            }*/
 
             builder.Append(node.Name);
 
@@ -69,10 +69,10 @@ namespace LibraProgramming.Parsing.Xaml.Visitors
 
             builder.Append('<').Append('/');
 
-            if (!String.IsNullOrEmpty(node.Prefix))
+            /*if (!String.IsNullOrEmpty(node.Prefix))
             {
                 builder.Append(node.Prefix).Append(':');
-            }
+            }*/
 
             builder.Append(node.Name).Append('>');
         }
