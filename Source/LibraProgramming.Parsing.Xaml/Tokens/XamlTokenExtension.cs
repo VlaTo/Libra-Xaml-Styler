@@ -14,7 +14,12 @@ namespace LibraProgramming.Parsing.Xaml.Tokens
         /// <returns></returns>
         public static bool IsEnd(this XamlToken token)
         {
-            return IsTerm(token, XamlTerminal.End);
+            if (null == token)
+            {
+                throw new ArgumentNullException(nameof(token));
+            }
+
+            return XamlTokenType.End == token.TokenType;
         }
 
         /// <summary>

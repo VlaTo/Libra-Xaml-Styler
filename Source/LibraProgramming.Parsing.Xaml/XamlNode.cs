@@ -10,7 +10,7 @@ namespace LibraProgramming.Parsing.Xaml
         private XamlNode parent;
         private XamlNodeName name;
 
-        public Collection<XamlAttribute> Attributes
+        private Collection<XamlAttribute> Attributes
         {
             get;
         }
@@ -95,11 +95,6 @@ namespace LibraProgramming.Parsing.Xaml
                 if (null == value)
                 {
                     throw new ArgumentNullException(nameof(value));
-                }
-
-                if (String.Equals(name, value))
-                {
-                    return;
                 }
 
                 name = value;

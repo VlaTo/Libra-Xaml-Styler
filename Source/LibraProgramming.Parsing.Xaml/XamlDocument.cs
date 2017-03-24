@@ -1,7 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Threading.Tasks;
-using XamlParser;
+using LibraProgramming.Parsing.Xaml.Core;
 
 namespace LibraProgramming.Parsing.Xaml
 {
@@ -20,6 +20,7 @@ namespace LibraProgramming.Parsing.Xaml
 
         private XamlDocument()
         {
+            Root = new XamlRootNode();
         }
 
         /// <summary>
@@ -53,14 +54,11 @@ namespace LibraProgramming.Parsing.Xaml
             }
 
             var document = new XamlDocument();
-            var context = new XamlParsingContext
-            {
-            };
 
             using (var tokenizer = new XamlTokenizer(reader, 1024))
             {
-                var parser = new XamlParser(tokenizer, document);
-                await parser.ParseAsync();
+                var parser = new XamlParser(tokenizer);
+                await parser.ParseAsync(document);
             }
 
             return document;

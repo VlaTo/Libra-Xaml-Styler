@@ -51,7 +51,6 @@
     <Compile Include="Core\XamlParsingContext.cs" />
     <Compile Include="IXamlAttribute.cs" />
     <Compile Include="IXamlNode.cs" />
-    <Compile Include="NodeName.cs" />
     <Compile Include="Tokens\XamlStringToken.cs" />
     <Compile Include="Tokens\XamlTerminalToken.cs" />
     <Compile Include="Tokens\XamlToken.cs" />

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using LibraProgramming.Parsing.Xaml.Tokens;
 
@@ -7,21 +8,32 @@ namespace LibraProgramming.Parsing.Xaml
     internal sealed class XamlParser
     {
         private readonly XamlTokenizer tokenizer;
-        private readonly XamlDocument document;
         private ParserState state;
 
-        public XamlParser(XamlTokenizer tokenizer, XamlDocument document)
+        public XamlParser(XamlTokenizer tokenizer)
         {
             state = ParserState.Begin;
             this.tokenizer = tokenizer;
-            this.document = document;
         }
 
-        public async Task ParseAsync()
+        public Task ParseAsync(XamlDocument document)
         {
+            if (null == document)
+            {
+                throw new ArgumentNullException(nameof(document));
+            }
+
+            var nodes = new Stack<XamlNode>();
+
+            nodes.Push(document.Root as XamlNode);
+
+            return ParseInternalAsync(nodes);
+        }
+
+        private async Task ParseInternalAsync(Stack<XamlNode> nodes)
+        {
+            var nameBuilder = new XamlNodeNameBuilder();
             var done = false;
-//            XamlNodeBuilder nodeBuilder;
-            XamlNodeNameBuilder nameBuilder = null;
 
             while (false == done)
             {
@@ -33,7 +45,7 @@ namespace LibraProgramming.Parsing.Xaml
 
                         while (true)
                         {
-                            token = await tokenizer.GetTermAsync();
+                            token = await tokenizer.GetTokenAsync();
 
                             if (token.IsWhitespace())
                             {
@@ -52,8 +64,7 @@ namespace LibraProgramming.Parsing.Xaml
 
                         if (token.IsOpenBracket())
                         {
-                            nameBuilder = new XamlNodeNameBuilder();
-                            state = ParserState.TagOpenBracket;
+                            state = ParserState.OpenBracket;
 
                             break;
                         }
@@ -61,186 +72,197 @@ namespace LibraProgramming.Parsing.Xaml
                         throw new Exception();
                     }
 
-                    case ParserState.TagOpenBracket:
+                    case ParserState.OpenBracket:
                     {
+                        var token = await tokenizer.GetTokenAsync();
+
+                        if (token.IsSlash())
+                        {
+                            state = ParserState.ClosingTagBegin;
+                            break;
+                        }
+
                         string text;
-                        var token = await tokenizer.GetAlphaNumericTokenAsync();
 
                         if (false == token.IsString(out text))
                         {
-                            throw new Exception();
+                            throw new XamlParsingException();
                         }
 
-                        token = await tokenizer.GetTermAsync();
+                        if (false == nameBuilder.IsEmpty)
+                        {
+                            throw new XamlParsingException();
+                        }
+
+                        token = await tokenizer.GetTokenAsync();
 
                         if (token.IsColon())
                         {
-                            nameBuilder.SetNamespaceAlias(text);
-                            state = ParserState.TagOpenNameColon;
+                            nameBuilder.SetAlias(text);
+                            state = ParserState.OpeningTagNamespaceColon;
 
                             break;
                         }
+
+                        nameBuilder.SetName(text);
 
                         if (token.IsDot())
                         {
-                            nameBuilder.SetName(text);
-                            state = ParserState.TagOpenNameDot;
-
+                            state = ParserState.OpeningTagNameDot;
                             break;
                         }
 
-                        if (token.IsEqual())
+                        if (token.IsWhitespace())
                         {
-                            nameBuilder.SetName(text);
-                            state = ParserState.TagOpenNameEqual;
-
+                            state = ParserState.OpeningTagNameWhitespace;
                             break;
                         }
 
                         if (token.IsSlash())
                         {
-                            nameBuilder.SetName(text);
-                            state = ParserState.TagOpenNameSlash;
-
+                            state = ParserState.OpeningTagNameSlash;
                             break;
                         }
 
                         if (token.IsCloseBracket())
                         {
-                            nameBuilder.SetName(text);
-                            state = ParserState.TagCloseBracket;
-
+                            state = ParserState.OpeningTagNameClose;
                             break;
                         }
 
-                        throw new Exception();
+                        throw new XamlParsingException();
                     }
 
-                    case ParserState.TagOpenNameColon:
+                    case ParserState.OpeningTagNamespaceColon:
                     {
                         string text;
-                        var token = await tokenizer.GetAlphaNumericTokenAsync();
+                        var token = await tokenizer.GetTokenAsync();
 
                         if (false == token.IsString(out text))
                         {
-                            throw new Exception();
+                            throw new XamlParsingException();
                         }
 
-                        token = await tokenizer.GetTermAsync();
+                        nameBuilder.SetName(text);
+                        token = await tokenizer.GetTokenAsync();
 
                         if (token.IsDot())
                         {
-                            nameBuilder.SetName(text);
-                            state = ParserState.TagOpenNameDot;
-
+                            state = ParserState.OpeningTagNameDot;
                             break;
                         }
 
-                        if (token.IsEqual())
+                        if (token.IsWhitespace())
                         {
-                            nameBuilder.SetName(text);
-                            state = ParserState.TagOpenNameEqual;
-
+                            state = ParserState.OpeningTagNameWhitespace;
                             break;
                         }
 
                         if (token.IsSlash())
                         {
-                            nameBuilder.SetName(text);
-                            state = ParserState.TagOpenNameSlash;
-
+                            state = ParserState.OpeningTagNameSlash;
                             break;
                         }
 
                         if (token.IsCloseBracket())
                         {
-                            nameBuilder.SetName(text);
-                            state = ParserState.TagCloseBracket;
-
+                            state = ParserState.OpeningTagNameClose;
                             break;
                         }
 
-                        throw new Exception();
+                        throw new XamlParsingException();
                     }
 
-                    case ParserState.TagOpenNameDot:
+                    case ParserState.OpeningTagNameDot:
                     {
                         string text;
-                        var token = await tokenizer.GetAlphaNumericTokenAsync();
+                        var token = await tokenizer.GetTokenAsync();
 
                         if (false == token.IsString(out text))
                         {
-                            throw new Exception();
+                            throw new XamlParsingException();
                         }
 
-                        token = await tokenizer.GetTermAsync();
+                        nameBuilder.AddPropertyPath(text);
+                        token = await tokenizer.GetTokenAsync();
 
                         if (token.IsDot())
                         {
-                            nameBuilder.AddPropertyPath(text);
                             break;
                         }
 
-                        if (token.IsEqual())
+                        if (token.IsWhitespace())
                         {
-                            nameBuilder.SetName(text);
-                            state = ParserState.TagOpenNameEqual;
-
+                            state = ParserState.OpeningTagNameWhitespace;
                             break;
                         }
 
                         if (token.IsSlash())
                         {
-                            nameBuilder.SetName(text);
-                            state = ParserState.TagOpenNameSlash;
-
+                            state = ParserState.OpeningTagNameSlash;
                             break;
                         }
 
                         if (token.IsCloseBracket())
                         {
-                            nameBuilder.SetName(text);
-                            state = ParserState.TagCloseBracket;
-
+                            state = ParserState.OpeningTagNameClose;
                             break;
                         }
 
-                        throw new Exception();
+                        throw new XamlParsingException();
                     }
 
-                    case ParserState.TagOpenNameEqual:
+                    case ParserState.OpeningTagNameSlash:
                     {
-                        throw new Exception();
-                    }
-
-                    case ParserState.TagOpenNameSlash:
-                    {
-                        var token = await tokenizer.GetTermAsync();
+                        var token = await tokenizer.GetTokenAsync();
 
                         if (token.IsCloseBracket())
                         {
-                            state = ParserState.TagInlineClose;
+                            state = ParserState.OpeningTagInlined;
                             break;
                         }
 
-                        throw new Exception();
+                        throw new XamlParsingException();
                     }
 
-                    case ParserState.TagCloseBracket:
+                    case ParserState.OpeningTagNameClose:
                     {
-                        state = ParserState.TagClosed;
+                        var parent = nodes.Peek();
+
+                        if (null == parent)
+                        {
+                            throw new XamlParsingException();
+                        }
+
+                        var node = new XamlNode
+                        {
+                            Name = nameBuilder.ToName()
+                        };
+
+                        parent.Children.Add(node);
+                        nodes.Push(node);
+                        nameBuilder.Reset();
+                        state = ParserState.OpeningTagClosed;
+
                         break;
                     }
 
-                    case ParserState.TagInlineClose:
+                    case ParserState.OpeningTagInlined:
                     {
-                        state = ParserState.TagClosed;
+                        nameBuilder.Reset();
+                        state = ParserState.OpeningTagClosed;
+
                         break;
                     }
 
-                    case ParserState.TagClosed:
+                    case ParserState.OpeningTagClosed:
                     {
-                        done = true;
+                        state = ParserState.Begin;
+                        break;
+                    }
+
+                    case ParserState.OpeningTagNameWhitespace:
+                    {
                         break;
                     }
                 }
@@ -253,14 +275,17 @@ namespace LibraProgramming.Parsing.Xaml
         private enum ParserState
         {
             Begin,
-            TagOpenBracket,
-            TagOpenNameColon,
-            TagOpenNameDot,
-            TagOpenNameEqual,
-            TagOpenNameSlash,
-            TagCloseBracket,
-            TagInlineClose,
-            TagClosed
+            //
+            OpenBracket,
+            OpeningTagNamespaceColon,
+            OpeningTagNameDot,
+            OpeningTagNameSlash,
+            OpeningTagNameClose,
+            OpeningTagNameWhitespace,
+            OpeningTagInlined,
+            OpeningTagClosed,
+            //
+            ClosingTagBegin
         }
     }
 }

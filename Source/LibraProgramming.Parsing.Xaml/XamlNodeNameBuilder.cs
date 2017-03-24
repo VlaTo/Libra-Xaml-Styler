@@ -5,23 +5,25 @@ namespace LibraProgramming.Parsing.Xaml
 {
     internal sealed class XamlNodeNameBuilder
     {
-        private string namespaceAlias;
+        private readonly IList<string> path;
+        private string alias;
         private string name;
-        private IList<string> path;
+
+        public bool IsEmpty => null == alias && null == name && 0 == path.Count;
 
         public XamlNodeNameBuilder()
         {
             path = new List<string>();
         }
 
-        public XamlNodeNameBuilder SetNamespaceAlias(string value)
+        public XamlNodeNameBuilder SetAlias(string value)
         {
             if (null == value)
             {
                 throw new ArgumentNullException(nameof(value));
             }
 
-            namespaceAlias = value;
+            alias = value;
 
             return this;
         }
@@ -48,6 +50,18 @@ namespace LibraProgramming.Parsing.Xaml
             path.Add(value);
 
             return this;
+        }
+
+        public XamlNodeName ToName()
+        {
+            return new XamlNodeName(alias ?? String.Empty, name, path);
+        }
+
+        public void Reset()
+        {
+            alias = null;
+            name = null;
+            path.Clear();
         }
     }
 }

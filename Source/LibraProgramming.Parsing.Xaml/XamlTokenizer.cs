@@ -32,60 +32,7 @@ namespace LibraProgramming.Parsing.Xaml
             Dispose(true);
         }
 
-        public async Task<XamlToken> GetTermAsync()
-        {
-            while (true)
-            {
-                switch (state)
-                {
-                    case TokenizerState.EndOfDocument:
-                    {
-                        return XamlToken.End;
-                    }
-
-                    case TokenizerState.Normal:
-                    {
-                        var input = await ReadNextCharAsync(true);
-
-                        if (Eof == input)
-                        {
-                            state = TokenizerState.EndOfDocument;
-                            return XamlToken.End;
-                        }
-
-                        var current = (char) input;
-
-                        if (Char.IsWhiteSpace(current))
-                        {
-                            return XamlToken.Terminal(XamlTerminal.Whitespace);
-                        }
-
-                        var term = GetTermFromChar(current);
-
-                        if (XamlTerminal.Unknown != term)
-                        {
-                            return XamlToken.Terminal(term);
-                        }
-
-                        state = TokenizerState.Unknown;
-
-                        break;
-                    }
-
-                    case TokenizerState.Unknown:
-                    {
-                        throw new Exception();
-                    }
-
-                    default:
-                    {
-                        throw new Exception();
-                    }
-                }
-            }
-        }
-
-        public async Task<XamlToken> GetAlphaNumericTokenAsync()
+        public async Task<XamlToken> GetTokenAsync()
         {
             var text = new StringBuilder();
 
@@ -106,8 +53,6 @@ namespace LibraProgramming.Parsing.Xaml
                         {
                             state = TokenizerState.EndOfDocument;
 
-                            await ReadNextCharAsync(true);
-
                             if (0 < text.Length)
                             {
                                 return XamlToken.String(text.ToString());
@@ -118,13 +63,29 @@ namespace LibraProgramming.Parsing.Xaml
 
                         var current = (char) input;
 
-                        if (CanAcceptSymbol(text.Length, current))
+                        if (Char.IsWhiteSpace(current))
                         {
-                            text.Append((char) await ReadNextCharAsync(true));
-                            break;
+                            await ReadNextCharAsync(true);
+                            return XamlToken.Terminal(XamlTerminal.Whitespace);
                         }
 
-                        return XamlToken.String(text.ToString());
+                        var term = GetTermFromChar(current);
+
+                        if (XamlTerminal.Unknown == term)
+                        {
+                            text.Append((char) await ReadNextCharAsync(true));
+                        }
+                        else if (0 < text.Length)
+                        {
+                            return XamlToken.String(text.ToString());
+                        }
+                        else
+                        {
+                            await ReadNextCharAsync(true);
+                            return XamlToken.Terminal(term);
+                        }
+
+                        break;
                     }
 
                     case TokenizerState.Unknown:
@@ -140,16 +101,11 @@ namespace LibraProgramming.Parsing.Xaml
             }
         }
 
-        private static bool CanAcceptSymbol(int length, char ch)
-        {
-            return 0 == length ? Char.IsLetter(ch) : Char.IsLetterOrDigit(ch);
-        }
-
         private static XamlTerminal GetTermFromChar(char ch)
         {
             char[] terminals =
             {
-                '<', ':', '.', '=', '\\', '>'
+                '<', ':', '.', '=', '/', '>'
             };
             XamlTerminal[] values =
             {
@@ -169,174 +125,6 @@ namespace LibraProgramming.Parsing.Xaml
 
             return values[index];
         }
-
-        /*public XamlTerminal GetTerminal()
-        {
-            XamlTerminal term;
-            var current = ReadNextCharAsync();
-
-            if (ClassifyTerminal(current, out term))
-            {
-                return term;
-            }
-
-            throw new Exception();
-        }*/
-
-        /*
-                private static bool ClassifyTerminal(int current, out XamlTerminal term)
-                {
-                    switch (current)
-                    {
-                        case '<':
-                        {
-                            term = XamlTerminal.OpenAngleBracket;
-                            return true;
-                        }
-
-                        case '=':
-                        {
-                            term = XamlTerminal.Equal;
-                            return true;
-                        }
-
-                        case '>':
-                        {
-                            term = XamlTerminal.CloseAngleBracket;
-                            return true;
-                        }
-
-                        case '/':
-                        {
-                            term = XamlTerminal.Slash;
-                            return true;
-                        }
-
-                        case '.':
-                        {
-                            term = XamlTerminal.Dot;
-                            return true;
-                        }
-
-                        case ':':
-                        {
-                            term = XamlTerminal.Colon;
-                            return true;
-                        }
-                    }
-
-                    if (Char.IsWhiteSpace((char) current) || Char.IsControl((char) current))
-                    {
-                        term = XamlTerminal.Whitespace;
-                        return true;
-                    }
-
-                    term = XamlTerminal.EOF;
-
-                    return false;
-                }
-        */
-
-        /*
-                public XamlTerminal GetAlphaNumericString(out string str)
-                {
-                    var name = new StringBuilder();
-
-                    while (true)
-                    {
-                        var current = ReadNextCharAsync();
-
-                        if (-1 == current)
-                        {
-                            str = null;
-                            break;
-                        }
-
-                        if (Char.IsDigit((char) current))
-                        {
-                            if (0 == name.Length)
-                            {
-                                throw new Exception();
-                            }
-                        }
-                        else
-                        if (!Char.IsLetter((char) current) && '_' != current)
-                        {
-                            XamlTerminal term;
-
-                            str = name.ToString();
-
-                            if (!ClassifyTerminal(current, out term))
-                            {
-                                throw new Exception();
-                            }
-                        }
-
-                        name.Append((char) current);
-                    }
-
-                    return XamlTerminal.EOF;
-                }
-        */
-
-        /*while (true)
-        {
-            if (-1 == current)
-            {
-                return null;
-            }
-
-            if (!Char.IsWhiteSpace((char)current))
-            {
-                break;
-            }
-
-            current = ReadNextChar();
-        }
-
-        var @namespace = String.Empty;
-        var name = new StringBuilder();
-
-        while (true)
-        {
-            if (':' == current)
-            {
-                if (0 == name.Length)
-                {
-                    throw new Exception();
-                }
-
-                if (0 < @namespace.Length)
-                {
-                    throw new Exception();
-                }
-
-                @namespace = name.ToString();
-                name.Clear();
-
-                continue;
-            }
-
-            if (Char.IsDigit((char) current))
-            {
-                if (0 == name.Length)
-                {
-                    throw new Exception();
-                }
-            }
-            else
-            if (!Char.IsLetter((char) current) && '_' != current)
-            {
-                // rollback one char
-                break;
-            }
-
-            name.Append((char) current);
-
-            current = ReadNextChar();
-        }
-
-        return new NodeName(@namespace, name.ToString());*/
 
         private void Dispose(bool dispose)
         {

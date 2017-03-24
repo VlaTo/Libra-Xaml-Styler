@@ -32,7 +32,7 @@ namespace UnitTests
         [TestCategory("Empty")]
         public async Task TestMethod2()
         {
-            const string test = " <app:Application>";
+            const string test = " <app:Application.Property.Attribute>";
             var document = await XamlDocument.ParseAsync(test);
 
             Assert.IsNotNull(document);
