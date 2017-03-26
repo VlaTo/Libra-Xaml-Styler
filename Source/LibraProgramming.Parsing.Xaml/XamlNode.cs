@@ -1,120 +1,147 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 
 namespace LibraProgramming.Parsing.Xaml
 {
-    internal class XamlNode : IXamlNode
+    /// <summary>
+    /// 
+    /// </summary>
+    public enum XamlNodeType
+    {
+        Attribute,
+        Element,
+        Document
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    public sealed class XamlAttributesCollection : Collection<XamlAttribute>
+    {
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    public sealed class XamlNodeList : Collection<XamlNode>
+    {
+    }    
+
+    /// <summary>
+    /// 
+    /// </summary>
+    public abstract class XamlNode : IEnumerable<XamlNode>
     {
         private XamlNode parent;
         private XamlNodeName name;
 
-        private Collection<XamlAttribute> Attributes
+        public virtual string BaseURI
         {
             get;
         }
 
-        public Collection<XamlNode> Children
+        public virtual XamlAttributesCollection Attributes
         {
             get;
         }
 
-        public XamlNode Parent
+        public virtual XamlNodeList ChildNodes
         {
-            get
-            {
-                return parent;
-            }
-            set
-            {
-                if (null != parent)
-                {
-                    throw new Exception();
-                }
-
-                if (null == value)
-                {
-                    throw new ArgumentNullException(nameof(value));
-                }
-
-                parent = value;
-                parent.Children.Add(this);
-            }
+            get;
         }
 
-        public string BaseURI
+        public virtual XamlNode FirstChild => ChildNodes.FirstOrDefault();
+
+        public virtual bool HasChildNodes => 0 < ChildNodes.Count;
+
+        public virtual XamlNode ParentNode
         {
-            get
-            {
-                /*if (String.IsNullOrEmpty(Prefix))
-                {
-                    return String.Empty;
-                }
-
-                var resolver = new XamlNamespaceResolver(this);
-
-                return resolver.GetUri(Prefix);*/
-
-                throw new NotImplementedException();
-            }
+            get;
         }
 
-/*
-        public string Prefix
+        public abstract string Name
         {
-            get
-            {
-                return prefix;
-            }
-            set
-            {
-                if (null == value)
-                {
-                    throw new ArgumentNullException(nameof(value));
-                }
-
-                if (String.Equals(prefix, value))
-                {
-                    return;
-                }
-
-                prefix = value;
-            }
-        }
-*/
-
-        public XamlNodeName Name
-        {
-            get
-            {
-                return name;
-            }
-            set
-            {
-                if (null == value)
-                {
-                    throw new ArgumentNullException(nameof(value));
-                }
-
-                name = value;
-            }
+            get;
         }
 
-        public XamlNode FirstChild => Children.FirstOrDefault();
-
-        public XamlNode LastChild => Children.LastOrDefault();
-
-        IReadOnlyCollection<IXamlAttribute> IXamlNode.Attributes => Attributes;
-
-        IReadOnlyCollection<IXamlNode> IXamlNode.Children => Children;
-        
-        IXamlNode IXamlNode.Parent => Parent;
-
-        public XamlNode()
+        public virtual string NamespaceURI
         {
-            Attributes = new Collection<XamlAttribute>();
-            Children = new Collection<XamlNode>();
+            get;
+        }
+
+        public virtual XamlNode LastChild => ChildNodes.LastOrDefault();
+
+        public virtual string Prefix
+        {
+            get;
+        }
+
+        public XamlNodeType NodeType
+        {
+            get;
+        }
+
+        public virtual string Value
+        {
+            get;
+            set;
+        }
+
+        protected XamlNode(XamlNodeType nodeType)
+        {
+            Attributes = new XamlAttributesCollection();
+            ChildNodes = new XamlNodeList();
+            NodeType = nodeType;
+        }
+
+        public IEnumerator<XamlNode> GetEnumerator()
+        {
+            return ChildNodes.GetEnumerator();
+        }
+
+        public XamlNode AppendChild(XamlNode node)
+        {
+            if (null == node)
+            {
+                throw new ArgumentNullException(nameof(node));
+            }
+
+            ChildNodes.Add(node);
+
+            return node;
+        }
+
+        public string GetNamespaceOfPrefix(string ns)
+        {
+            
+        }
+
+        public XamlNode RemoveChild(XamlNode node)
+        {
+            if (null == node)
+            {
+                throw new ArgumentNullException(nameof(node));
+            }
+
+            if (false == ChildNodes.Remove(node))
+            {
+                throw new ArgumentException("", nameof(node));
+            }
+
+            return node;
+        }
+
+        public void RemoveAll()
+        {
+            ChildNodes.Clear();
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
         }
     }
 }

@@ -49,17 +49,16 @@
   <ItemGroup>
     <Compile Include="Core\XamlDocumentValidator.cs" />
     <Compile Include="Core\XamlParsingContext.cs" />
-    <Compile Include="IXamlAttribute.cs" />
-    <Compile Include="IXamlNode.cs" />
     <Compile Include="Tokens\XamlStringToken.cs" />
     <Compile Include="Tokens\XamlTerminalToken.cs" />
     <Compile Include="Tokens\XamlToken.cs" />
     <Compile Include="Tokens\XamlTokenExtension.cs" />
     <Compile Include="XamlDocument.cs" />
-    <Compile Include="XamlNodeBuilder.cs" />
+    <Compile Include="XamlElement.cs" />
+    <Compile Include="XamlNamespaceManager.cs" />
+    <Compile Include="XamlNamespaceScope.cs" />
     <Compile Include="XamlNodeName.cs" />
     <Compile Include="XamlNodeNameBuilder.cs" />
-    <Compile Include="XamlParsingContext.cs" />
     <Compile Include="XamlParsingException.cs" />
     <Compile Include="TokenizerException.cs" />
     <Compile Include="XamlAttribute.cs" />

@@ -2,7 +2,7 @@
 
 namespace LibraProgramming.Parsing.Xaml
 {
-    internal sealed class XamlAttribute : IXamlAttribute
+    public sealed class XamlAttribute : XamlNode
     {
         private XamlNode node;
         private string prefix;
