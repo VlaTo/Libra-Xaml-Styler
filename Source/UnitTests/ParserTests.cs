@@ -16,7 +16,6 @@ namespace UnitTests
             var document = await XamlDocument.ParseAsync(test);
 
             Assert.IsNotNull(document);
-            XmlDocument
         }
 
         [TestMethod]

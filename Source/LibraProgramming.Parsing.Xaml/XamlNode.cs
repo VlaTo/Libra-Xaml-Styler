@@ -36,7 +36,6 @@ namespace LibraProgramming.Parsing.Xaml
     public abstract class XamlNode : IEnumerable<XamlNode>
     {
         private XamlNode parent;
-        private XamlNodeName name;
 
         public virtual string BaseURI
         {
@@ -57,9 +56,38 @@ namespace LibraProgramming.Parsing.Xaml
 
         public virtual bool HasChildNodes => 0 < ChildNodes.Count;
 
+        /// <summary>
+        /// 
+        /// </summary>
         public virtual XamlNode ParentNode
         {
-            get;
+            get
+            {
+                if (XamlNodeType.Document != parent.NodeType)
+                {
+                    return parent;
+                }
+
+                var first = parent.FirstChild as XamlLinkedNode;
+
+                if (null != first)
+                {
+                    var node = first;
+
+                    do
+                    {
+                        if (this == node)
+                        {
+                            return parent;
+                        }
+
+                        node = node.Next;
+
+                    } while (null != node && first != node);
+                }
+
+                return null;
+            }
         }
 
         public abstract string Name
@@ -84,17 +112,23 @@ namespace LibraProgramming.Parsing.Xaml
             get;
         }
 
+        public virtual string LocalName
+        {
+            get;
+        }
+
         public virtual string Value
         {
             get;
             set;
         }
 
-        protected XamlNode(XamlNodeType nodeType)
+        protected XamlNode(XamlNodeType nodeType, XamlDocument document)
         {
             Attributes = new XamlAttributesCollection();
             ChildNodes = new XamlNodeList();
             NodeType = nodeType;
+            parent = document;
         }
 
         public IEnumerator<XamlNode> GetEnumerator()
@@ -116,7 +150,7 @@ namespace LibraProgramming.Parsing.Xaml
 
         public string GetNamespaceOfPrefix(string ns)
         {
-            
+            throw new NotImplementedException();
         }
 
         public XamlNode RemoveChild(XamlNode node)

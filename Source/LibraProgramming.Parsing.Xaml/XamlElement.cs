@@ -6,14 +6,16 @@ namespace LibraProgramming.Parsing.Xaml
     /// <summary>
     /// 
     /// </summary>
-    public sealed class XamlElement : XamlNode
+    public class XamlElement : XamlLinkedNode
     {
         private static readonly StringComparer comparer = StringComparer.Ordinal;
+        private readonly XamlName name;
 
-        public override string Name
-        {
-            get;
-        }
+        public override string Name => name.Name;
+
+        public override string Prefix => name.Prefix;
+
+        public override string LocalName => name.LocalName;
 
         public XamlElement this[int index]
         {
@@ -65,8 +67,14 @@ namespace LibraProgramming.Parsing.Xaml
             }
         }
 
-        public XamlElement()
-            : base(XamlNodeType.Element)
+        public XamlElement(XamlDocument document, XamlName name)
+            : base(XamlNodeType.Element, document, null)
+        {
+            this.name = name;
+        }
+
+        protected XamlElement(XamlNodeType nodeType)
+            : base(nodeType)
         {
         }
     }

@@ -9,14 +9,22 @@ namespace LibraProgramming.Parsing.Xaml.Visitors
         {
         }
 
-        public void Visit(IXamlNode node)
+        public void Visit(XamlDocument document)
         {
-            if (null == node)
+            if (null == document)
             {
-                throw new ArgumentNullException(nameof(node));
+                throw new ArgumentNullException(nameof(document));
             }
 
-            VisitNode(node);
+            VisitDocument(document);
+        }
+
+        protected virtual void VisitDocument(XamlDocument document)
+        {
+            foreach (var VARIABLE in COLLECTION)
+            {
+                VisitNode();
+            }
         }
 
         protected virtual void VisitNode(IXamlNode node)

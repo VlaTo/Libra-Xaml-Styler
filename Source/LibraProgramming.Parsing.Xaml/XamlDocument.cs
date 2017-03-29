@@ -1,26 +1,21 @@
 ﻿using System;
 using System.IO;
 using System.Threading.Tasks;
-using LibraProgramming.Parsing.Xaml.Core;
 
 namespace LibraProgramming.Parsing.Xaml
 {
     /// <summary>
     /// 
     /// </summary>
-    public sealed class XamlDocument
+    public sealed class XamlDocument : XamlNode
     {
-        /// <summary>
-        /// 
-        /// </summary>
-        public IXamlNode Root
-        {
-            get;
-        }
+        public override string Name => "#document";
+
+        public override XamlNode ParentNode => null;
 
         private XamlDocument()
+            : base(XamlNodeType.Document, null)
         {
-            Root = new XamlRootNode();
         }
 
         /// <summary>

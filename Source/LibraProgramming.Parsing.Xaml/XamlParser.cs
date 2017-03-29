@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Text;
 using System.Threading.Tasks;
 using LibraProgramming.Parsing.Xaml.Tokens;
 
@@ -23,16 +24,17 @@ namespace LibraProgramming.Parsing.Xaml
                 throw new ArgumentNullException(nameof(document));
             }
 
-            var nodes = new Stack<XamlNode>();
+            var nodes = new Stack<XamlElement>();
 
-            nodes.Push(document.Root as XamlNode);
+            nodes.Push(document);
 
             return ParseInternalAsync(nodes);
         }
 
-        private async Task ParseInternalAsync(Stack<XamlNode> nodes)
+        private async Task ParseInternalAsync(Stack<XamlElement> nodes)
         {
-            var nameBuilder = new XamlNodeNameBuilder();
+            string prefix = null;
+            string fullName = null;
             var done = false;
 
             while (false == done)
@@ -89,22 +91,24 @@ namespace LibraProgramming.Parsing.Xaml
                             throw new XamlParsingException();
                         }
 
-                        if (false == nameBuilder.IsEmpty)
+                        /*if (false == nameBuilder.IsEmpty)
                         {
                             throw new XamlParsingException();
-                        }
+                        }*/
 
                         token = await tokenizer.GetTokenAsync();
 
                         if (token.IsColon())
                         {
-                            nameBuilder.SetAlias(text);
+                            prefix = text;
+                            fullName = null;
                             state = ParserState.OpeningTagNamespaceColon;
 
                             break;
                         }
 
-                        nameBuilder.SetName(text);
+                        prefix = null;
+                        fullName = text;
 
                         if (token.IsDot())
                         {
@@ -143,7 +147,7 @@ namespace LibraProgramming.Parsing.Xaml
                             throw new XamlParsingException();
                         }
 
-                        nameBuilder.SetName(text);
+                        fullName = text;
                         token = await tokenizer.GetTokenAsync();
 
                         if (token.IsDot())
@@ -183,7 +187,7 @@ namespace LibraProgramming.Parsing.Xaml
                             throw new XamlParsingException();
                         }
 
-                        nameBuilder.AddPropertyPath(text);
+                        fullName = new StringBuilder(fullName).Append('.').Append(text).ToString();
                         token = await tokenizer.GetTokenAsync();
 
                         if (token.IsDot())
@@ -234,14 +238,10 @@ namespace LibraProgramming.Parsing.Xaml
                             throw new XamlParsingException();
                         }
 
-                        var node = new XamlNode
-                        {
-                            Name = nameBuilder.ToName()
-                        };
+                        var node = new XamlElement(XamlName.Create(prefix, fullName, null));
 
-                        parent.Children.Add(node);
+                        parent.AppendChild(node);
                         nodes.Push(node);
-                        nameBuilder.Reset();
                         state = ParserState.OpeningTagClosed;
 
                         break;
@@ -249,7 +249,6 @@ namespace LibraProgramming.Parsing.Xaml
 
                     case ParserState.OpeningTagInlined:
                     {
-                        nameBuilder.Reset();
                         state = ParserState.OpeningTagClosed;
 
                         break;

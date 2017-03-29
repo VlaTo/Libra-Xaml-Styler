@@ -1,13 +1,14 @@
-﻿using System;
-
-namespace LibraProgramming.Parsing.Xaml
+﻿namespace LibraProgramming.Parsing.Xaml
 {
     public sealed class XamlAttribute : XamlNode
     {
-        private XamlNode node;
-        private string prefix;
-        private string name;
+        private readonly XamlName name;
 
+        public override string Name => name.Name;
+
+        public override string Prefix => name.Prefix;
+
+/*
         public XamlNode Node
         {
             get
@@ -30,57 +31,20 @@ namespace LibraProgramming.Parsing.Xaml
                 node.Attributes.Add(this);
             }
         }
+*/
 
-        public string Name
+        public override string Value
         {
             get
             {
-                return name;
-            }
-            internal set
-            {
-                if (null == value)
-                {
-                    throw new ArgumentNullException(nameof(value));
-                }
-
-                if (String.Equals(name, value))
-                {
-                    return;
-                }
-
-                name = value;
+                return null;
             }
         }
 
-        public string Prefix
+        public XamlAttribute(XamlName name)
+            : base(XamlNodeType.Attribute)
         {
-            get
-            {
-                return prefix;
-            }
-            set
-            {
-                if (null == value)
-                {
-                    throw new ArgumentNullException(nameof(value));
-                }
-
-                if (String.Equals(prefix, value))
-                {
-                    return;
-                }
-
-                prefix = value;
-            }
+            this.name = name;
         }
-
-        public string Value
-        {
-            get;
-            internal set;
-        }
-
-        IXamlNode IXamlAttribute.Node => Node;
     }
 }
