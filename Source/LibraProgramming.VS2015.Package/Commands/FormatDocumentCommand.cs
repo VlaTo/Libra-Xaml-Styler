@@ -58,7 +58,7 @@ namespace LibraProgramming.VS2015.Package.Commands
                 return;
             }
 
-            output.WriteLine($"[XamlStyler] formatting document: {document.FullName}");
+            output.WriteLine($"[XamlStyler] Source document: \'{document.FullName}\'");
 
             var start = textDocument.StartPoint.CreateEditPoint();
             var end = textDocument.EndPoint.CreateEditPoint();
@@ -102,11 +102,14 @@ namespace LibraProgramming.VS2015.Package.Commands
         {
             using (var reader = new StringReader(start.GetText(end)))
             {
-                var text = new StringBuilder();
                 var document = await XamlDocument.ParseAsync(reader);
-                var visitor = new StylerNodeVisitor(text, new StylerSettings());
+                var text = new StringBuilder();
 
-                visitor.Visit(document.Root);
+                using (var writer = new StringWriter(text))
+                {
+                    var visitor = new ReformatXamlVisitor(writer, new DocumentReformatSettings());
+                    visitor.Visit(document);
+                }
 
                 start.ReplaceText(end, text.ToString(), 0);
             }

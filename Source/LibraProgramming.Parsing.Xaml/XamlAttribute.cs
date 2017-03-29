@@ -41,8 +41,8 @@
             }
         }
 
-        public XamlAttribute(XamlName name)
-            : base(XamlNodeType.Attribute)
+        public XamlAttribute(XamlDocument document, XamlName name)
+            : base(XamlNodeType.Attribute, document)
         {
             this.name = name;
         }

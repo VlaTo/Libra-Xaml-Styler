@@ -24,14 +24,14 @@ namespace LibraProgramming.Parsing.Xaml
                 throw new ArgumentNullException(nameof(document));
             }
 
-            var nodes = new Stack<XamlElement>();
+            var nodes = new Stack<XamlNode>();
 
             nodes.Push(document);
 
-            return ParseInternalAsync(nodes);
+            return ParseInternalAsync(document, nodes);
         }
 
-        private async Task ParseInternalAsync(Stack<XamlElement> nodes)
+        private async Task ParseInternalAsync(XamlDocument document, Stack<XamlNode> nodes)
         {
             string prefix = null;
             string fullName = null;
@@ -238,7 +238,7 @@ namespace LibraProgramming.Parsing.Xaml
                             throw new XamlParsingException();
                         }
 
-                        var node = new XamlElement(XamlName.Create(prefix, fullName, null));
+                        var node = new XamlElement(document, XamlName.Create(prefix, fullName));
 
                         parent.AppendChild(node);
                         nodes.Push(node);

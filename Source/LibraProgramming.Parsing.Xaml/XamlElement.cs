@@ -30,28 +30,28 @@ namespace LibraProgramming.Parsing.Xaml
             }
         }
 
-        public XamlElement this[string name]
+        public XamlElement this[string n]
         {
             get
             {
-                if (String.IsNullOrEmpty(name))
+                if (String.IsNullOrEmpty(n))
                 {
-                    throw new ArgumentException("", nameof(name));
+                    throw new ArgumentException("", nameof(n));
                 }
 
-                var element = ChildNodes.FirstOrDefault(child => comparer.Equals(child.Name, name));
+                var element = ChildNodes.FirstOrDefault(child => comparer.Equals(child.Name, n));
 
                 return (XamlElement) element;
             }
         }
 
-        public XamlElement this[string name, string ns]
+        public XamlElement this[string n, string ns]
         {
             get
             {
-                if (String.IsNullOrEmpty(name))
+                if (String.IsNullOrEmpty(n))
                 {
-                    throw new ArgumentException("", nameof(name));
+                    throw new ArgumentException("", nameof(n));
                 }
 
                 if (null == ns)
@@ -60,7 +60,7 @@ namespace LibraProgramming.Parsing.Xaml
                 }
 
                 var element = ChildNodes.FirstOrDefault(
-                    child => comparer.Equals(child.Name, name) && comparer.Equals(child.Prefix, ns)
+                    child => comparer.Equals(child.Name, n) && comparer.Equals(child.Prefix, ns)
                 );
 
                 return (XamlElement) element;
@@ -68,13 +68,13 @@ namespace LibraProgramming.Parsing.Xaml
         }
 
         public XamlElement(XamlDocument document, XamlName name)
-            : base(XamlNodeType.Element, document, null)
+            : this(XamlNodeType.Element, document)
         {
             this.name = name;
         }
 
-        protected XamlElement(XamlNodeType nodeType)
-            : base(nodeType)
+        protected XamlElement(XamlNodeType nodeType, XamlDocument document)
+            : base(nodeType, document, null)
         {
         }
     }

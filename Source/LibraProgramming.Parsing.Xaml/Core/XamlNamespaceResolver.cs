@@ -37,7 +37,7 @@ namespace LibraProgramming.Parsing.Xaml.Core
                     return attribute.Value;
                 }
 
-                temp = temp.Parent;
+                temp = temp.ParentNode;
             }
 
             return String.Empty;

@@ -61,6 +61,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="TokenizerTestFixture.cs" />
     <Compile Include="ParserTests.cs" />
+    <Compile Include="ReformatTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\LibraProgramming.Parsing.Xaml\LibraProgramming.Parsing.Xaml.csproj">

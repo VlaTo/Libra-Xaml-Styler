@@ -9,11 +9,13 @@ namespace LibraProgramming.Parsing.Xaml
     /// </summary>
     public sealed class XamlDocument : XamlNode
     {
+        public override string LocalName => Name;
+
         public override string Name => "#document";
 
         public override XamlNode ParentNode => null;
 
-        private XamlDocument()
+        public XamlDocument()
             : base(XamlNodeType.Document, null)
         {
         }

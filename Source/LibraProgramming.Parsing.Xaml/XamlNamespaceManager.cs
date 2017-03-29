@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 
 namespace LibraProgramming.Parsing.Xaml
@@ -9,7 +10,7 @@ namespace LibraProgramming.Parsing.Xaml
         {
             get
             {
-                
+                throw new NotImplementedException();
             }
         }
 
@@ -25,27 +26,27 @@ namespace LibraProgramming.Parsing.Xaml
 
         public IDictionary<string, string> GetNamespacesInScope(XamlNamespaceScope scope)
         {
-            
+            throw new NotImplementedException();
         }
 
         public bool HasNamespace(string prefix)
         {
-            
+            throw new NotImplementedException();
         }
 
         public string LookupNamespace(string prefix)
         {
-            
+            throw new NotImplementedException();
         }
 
         public string LookupPrefix(string uri)
         {
-            
+            throw new NotImplementedException();
         }
 
         public bool PopScope()
         {
-            
+            throw new NotImplementedException();
         }
 
         IEnumerator IEnumerable.GetEnumerator()

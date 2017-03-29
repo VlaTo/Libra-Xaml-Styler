@@ -2,44 +2,36 @@
 {
     public class XamlName
     {
-        private string prefix;
-        private string name;
         private string ns;
-        private string localName;
 
         public string Prefix
         {
-            get
-            {
-                return prefix;
-            }
+            get;
         }
 
         public string Name
         {
-            get
-            {
-                return name;
-            }
+            get;
         }
 
         public string LocalName
         {
             get
             {
-                return localName;
+                var position = Name.IndexOf('.');
+                return 0 > position ? Name : Name.Substring(0, position);
             }
         }
 
-        public static XamlName Create(string prefix, string localName, string ns)
+        public static XamlName Create(string prefix, string name, string ns = null)
         {
-            return new XamlName(prefix, localName, ns);
+            return new XamlName(prefix, name, ns);
         }
 
-        internal XamlName(string prefix, string localName, string ns)
+        internal XamlName(string prefix, string name, string ns)
         {
-            this.prefix = prefix;
-            this.localName = localName;
+            Prefix = prefix;
+            Name = name;
             this.ns = ns;
         }
     }

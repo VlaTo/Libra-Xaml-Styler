@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 
 namespace LibraProgramming.Parsing.Xaml.Visitors
 {
@@ -9,7 +8,7 @@ namespace LibraProgramming.Parsing.Xaml.Visitors
         {
         }
 
-        public void Visit(XamlDocument document)
+        public virtual void Visit(XamlDocument document)
         {
             if (null == document)
             {
@@ -21,46 +20,63 @@ namespace LibraProgramming.Parsing.Xaml.Visitors
 
         protected virtual void VisitDocument(XamlDocument document)
         {
-            foreach (var VARIABLE in COLLECTION)
+            foreach (var child in document.ChildNodes)
             {
-                VisitNode();
+                ProcessChildNode(child);
             }
         }
 
-        protected virtual void VisitNode(IXamlNode node)
+        protected virtual void VisitNode(XamlNode node)
         {
-            VisitOpenTag(node);
-            VisitNodeChildren(node.Children);
-            VisitCloseTag(node);
-        }
-
-        protected virtual void VisitNodeChildren(IReadOnlyCollection<IXamlNode> children)
-        {
-            foreach (var child in children)
+            foreach (var attribute in node.Attributes)
             {
-                VisitNode(child);
+                VisitAttribute(attribute);
+            }
+
+            foreach (var child in node.ChildNodes)
+            {
+                ProcessChildNode(child);
             }
         }
 
-        protected virtual void VisitNodeAttributes(IReadOnlyCollection<IXamlAttribute> attributes)
+        protected virtual void VisitAttribute(XamlAttribute attribute)
         {
-            foreach (var attribute in attributes)
+        }
+
+        protected virtual void VisitComment(XamlComment comment)
+        {
+        }
+
+        protected virtual void VisitElement(XamlElement element)
+        {
+        }
+
+        private void ProcessChildNode(XamlNode node)
+        {
+            var comment = node as XamlComment;
+
+            if (null != comment)
             {
-                VisitNodeAttribute(attribute);
+                VisitComment(comment);
+            }
+            else
+            {
+                ProcessChildElement(node);
             }
         }
 
-        protected virtual void VisitNodeAttribute(IXamlAttribute attribute)
+        private void ProcessChildElement(XamlNode node)
         {
-        }
+            var element = node as XamlElement;
 
-        protected virtual void VisitOpenTag(IXamlNode node)
-        {
-            VisitNodeAttributes(node.Attributes);
-        }
-
-        protected virtual void VisitCloseTag(IXamlNode node)
-        {
+            if (null != element)
+            {
+                VisitElement(element);
+            }
+            else
+            {
+                VisitNode(node);
+            }
         }
     }
 }

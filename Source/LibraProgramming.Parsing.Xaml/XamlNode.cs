@@ -11,8 +11,24 @@ namespace LibraProgramming.Parsing.Xaml
     /// </summary>
     public enum XamlNodeType
     {
+        /// <summary>
+        /// 
+        /// </summary>
         Attribute,
+
+        /// <summary>
+        /// 
+        /// </summary>
         Element,
+
+        /// <summary>
+        /// 
+        /// </summary>
+        Comment,
+
+        /// <summary>
+        /// 
+        /// </summary>
         Document
     }
 

@@ -48,11 +48,11 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Core\XamlDocumentValidator.cs" />
-    <Compile Include="Core\XamlParsingContext.cs" />
     <Compile Include="Tokens\XamlStringToken.cs" />
     <Compile Include="Tokens\XamlTerminalToken.cs" />
     <Compile Include="Tokens\XamlToken.cs" />
     <Compile Include="Tokens\XamlTokenExtension.cs" />
+    <Compile Include="XamlComment.cs" />
     <Compile Include="XamlDocument.cs" />
     <Compile Include="XamlElement.cs" />
     <Compile Include="XamlLinkedNode.cs" />
@@ -73,10 +73,10 @@
       <DependentUpon>Resource.resx</DependentUpon>
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Visitors\StylerNodeVisitor.cs" />
+    <Compile Include="Visitors\ReformatXamlVisitor.cs" />
     <Compile Include="Visitors\XamlNodeVisitor.cs" />
     <Compile Include="XamlParser.cs" />
-    <Compile Include="StylerSettings.cs" />
+    <Compile Include="DocumentReformatSettings.cs" />
     <Compile Include="XamlTerminal.cs" />
     <Compile Include="XamlTokenizer.cs" />
   </ItemGroup>
