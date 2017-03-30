@@ -8,7 +8,7 @@
         /// <summary>
         /// 
         /// </summary>
-        public XamlLinkedNode PreviousSubling
+        public override XamlNode PreviousSubling
         {
             get
             {
@@ -16,7 +16,7 @@
 
                 if (null != parent)
                 {
-                    var node = parent.FirstChild as XamlLinkedNode;
+                    var node = parent.FirstChild;
 
                     while (null != node)
                     {
@@ -38,7 +38,7 @@
         /// <summary>
         /// 
         /// </summary>
-        public XamlLinkedNode NextSubling
+        public override XamlNode NextSubling
         {
             get
             {
@@ -50,6 +50,7 @@
         internal XamlLinkedNode Next
         {
             get;
+            set;
         }
 
         protected XamlLinkedNode(XamlNodeType nodeType, XamlDocument document, XamlLinkedNode next)

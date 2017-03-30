@@ -37,5 +37,15 @@ namespace UnitTests
 
             Assert.IsNotNull(document);
         }
+
+        [TestMethod]
+        [TestCategory("Empty")]
+        public async Task TestMethod3()
+        {
+            const string test = "<app:Application.Property.Attribute> </app:Application.Property.Attribute>";
+            var document = await XamlDocument.ParseAsync(test);
+
+            Assert.IsNotNull(document);
+        }
     }
 }

@@ -1,5 +1,4 @@
 using System;
-using System.Linq;
 
 namespace LibraProgramming.Parsing.Xaml
 {
@@ -8,7 +7,6 @@ namespace LibraProgramming.Parsing.Xaml
     /// </summary>
     public class XamlElement : XamlLinkedNode
     {
-        private static readonly StringComparer comparer = StringComparer.Ordinal;
         private readonly XamlName name;
 
         public override string Name => name.Name;
@@ -21,16 +19,18 @@ namespace LibraProgramming.Parsing.Xaml
         {
             get
             {
-                if (0 > index || index >= ChildNodes.Count)
+                var nodes = ChildNodes;
+
+                if (0 > index || index >= nodes.Count)
                 {
                     throw new IndexOutOfRangeException();
                 }
 
-                return (XamlElement) ChildNodes[index];
+                return (XamlElement) nodes[index];
             }
         }
 
-        public XamlElement this[string n]
+        /*public XamlElement this[string n]
         {
             get
             {
@@ -59,13 +59,21 @@ namespace LibraProgramming.Parsing.Xaml
                     throw new ArgumentNullException(nameof(ns));
                 }
 
+                var temp = XamlName.Create(n, ns);
+
+                for (XamlElement node = FirstChild; null != node; node = node.NextSubling)
+                {
+                    if(node.XamlName==)
+                }
                 var element = ChildNodes.FirstOrDefault(
                     child => comparer.Equals(child.Name, n) && comparer.Equals(child.Prefix, ns)
                 );
 
                 return (XamlElement) element;
             }
-        }
+        }*/
+
+        internal XamlName XamlName => name;
 
         public XamlElement(XamlDocument document, XamlName name)
             : this(XamlNodeType.Element, document)

@@ -52,6 +52,7 @@
     <Compile Include="Tokens\XamlTerminalToken.cs" />
     <Compile Include="Tokens\XamlToken.cs" />
     <Compile Include="Tokens\XamlTokenExtension.cs" />
+    <Compile Include="XamlChildNodes.cs" />
     <Compile Include="XamlComment.cs" />
     <Compile Include="XamlDocument.cs" />
     <Compile Include="XamlElement.cs" />
@@ -59,6 +60,8 @@
     <Compile Include="XamlName.cs" />
     <Compile Include="XamlNamespaceManager.cs" />
     <Compile Include="XamlNamespaceScope.cs" />
+    <Compile Include="XamlNodeEnumerator.cs" />
+    <Compile Include="XamlNodeList.cs" />
     <Compile Include="XamlParsingException.cs" />
     <Compile Include="TokenizerException.cs" />
     <Compile Include="XamlAttribute.cs" />

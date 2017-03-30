@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using LibraProgramming.Parsing.Xaml.Tokens;
@@ -17,18 +18,27 @@ namespace LibraProgramming.Parsing.Xaml
             this.tokenizer = tokenizer;
         }
 
-        public Task ParseAsync(XamlDocument document)
+        public async Task ParseAsync(XamlDocument document)
         {
             if (null == document)
             {
                 throw new ArgumentNullException(nameof(document));
             }
 
-            var nodes = new Stack<XamlNode>();
+            var levels = new Stack<XamlNode>();
 
-            nodes.Push(document);
+            levels.Push(document.Root);
 
-            return ParseInternalAsync(document, nodes);
+            await ParseInternalAsync(document, levels);
+
+            if (1 != levels.Count)
+            {
+                throw new XamlParsingException();
+            }
+
+            var last = levels.Pop();
+
+
         }
 
         private async Task ParseInternalAsync(XamlDocument document, Stack<XamlNode> nodes)
@@ -238,7 +248,8 @@ namespace LibraProgramming.Parsing.Xaml
                             throw new XamlParsingException();
                         }
 
-                        var node = new XamlElement(document, XamlName.Create(prefix, fullName));
+                        var name = XamlName.Create(prefix, fullName, null);
+                        var node = new XamlElement(document, name);
 
                         parent.AppendChild(node);
                         nodes.Push(node);
@@ -262,7 +273,138 @@ namespace LibraProgramming.Parsing.Xaml
 
                     case ParserState.OpeningTagNameWhitespace:
                     {
+                        string text;
+                        var token = await tokenizer.GetTokenAsync();
+
+                        if (false == token.IsString(out text))
+                        {
+                            throw new XamlParsingException();
+                        }
                         break;
+                    }
+
+                    case ParserState.ClosingTagBegin:
+                    {
+                        string text;
+                        var token = await tokenizer.GetTokenAsync();
+
+                        if (false == token.IsString(out text))
+                        {
+                            throw new XamlParsingException();
+                        }
+
+                        token = await tokenizer.GetTokenAsync();
+
+                        if (token.IsColon())
+                        {
+                            prefix = text;
+                            fullName = null;
+                            state = ParserState.ClosingTagNamespaceColon;
+
+                            break;
+                        }
+
+                        prefix = null;
+                        fullName = text;
+
+                        if (token.IsDot())
+                        {
+                            state = ParserState.ClosingTagNameDot;
+                            break;
+                        }
+
+                        if (token.IsCloseBracket())
+                        {
+                            state = ParserState.ClosingTagNameClose;
+                            break;
+                        }
+
+                        throw new XamlParsingException();
+                    }
+
+                    case ParserState.ClosingTagNamespaceColon:
+                    {
+                        string text;
+                        var token = await tokenizer.GetTokenAsync();
+
+                        if (false == token.IsString(out text))
+                        {
+                            throw new XamlParsingException();
+                        }
+
+                        fullName = text;
+                        token = await tokenizer.GetTokenAsync();
+
+                        if (token.IsDot())
+                        {
+                            state = ParserState.ClosingTagNameDot;
+                            break;
+                        }
+
+                        if (token.IsCloseBracket())
+                        {
+                            state = ParserState.ClosingTagNameClose;
+                            break;
+                        }
+
+                        throw new XamlParsingException();
+                    }
+
+                    case ParserState.ClosingTagNameDot:
+                    {
+                        string text;
+                        var token = await tokenizer.GetTokenAsync();
+
+                        if (false == token.IsString(out text))
+                        {
+                            throw new XamlParsingException();
+                        }
+
+                        fullName = new StringBuilder(fullName).Append('.').Append(text).ToString();
+                        token = await tokenizer.GetTokenAsync();
+
+                        if (token.IsDot())
+                        {
+                            break;
+                        }
+
+                        if (token.IsCloseBracket())
+                        {
+                            state = ParserState.ClosingTagNameClose;
+                            break;
+                        }
+
+                        throw new XamlParsingException();
+                    }
+
+                    case ParserState.ClosingTagNameClose:
+                    {
+                        var node = nodes.Peek();
+
+                        if (null == node)
+                        {
+                            throw new XamlParsingException();
+                        }
+
+                        var temp = XamlName.Create(prefix, fullName, null);
+
+                        if (XamlNodeType.Element == node.NodeType)
+                        {
+                            var name = ((XamlElement) node).XamlName;
+
+                            if (temp != name)
+                            {
+                                throw new XamlParsingException();
+                            }
+
+                            nodes.Pop();
+
+                            state = ParserState.Begin;
+
+                            break;
+                        }
+
+                        throw new XamlParsingException();
                     }
                 }
             }
@@ -284,7 +426,10 @@ namespace LibraProgramming.Parsing.Xaml
             OpeningTagInlined,
             OpeningTagClosed,
             //
-            ClosingTagBegin
+            ClosingTagBegin,
+            ClosingTagNamespaceColon,
+            ClosingTagNameDot,
+            ClosingTagNameClose
         }
     }
 }

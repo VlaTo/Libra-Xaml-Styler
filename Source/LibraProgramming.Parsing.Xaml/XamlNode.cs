@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Runtime.InteropServices;
 
 namespace LibraProgramming.Parsing.Xaml
 {
@@ -42,14 +43,7 @@ namespace LibraProgramming.Parsing.Xaml
     /// <summary>
     /// 
     /// </summary>
-    public sealed class XamlNodeList : Collection<XamlNode>
-    {
-    }    
-
-    /// <summary>
-    /// 
-    /// </summary>
-    public abstract class XamlNode : IEnumerable<XamlNode>
+    public abstract class XamlNode : IEnumerable
     {
         private XamlNode parent;
 
@@ -63,14 +57,27 @@ namespace LibraProgramming.Parsing.Xaml
             get;
         }
 
-        public virtual XamlNodeList ChildNodes
+        public virtual XamlNodeList ChildNodes => new XamlChildNodes(this);
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public virtual XamlNode FirstChild => LastNode?.Next;
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public virtual bool HasChildNodes => null != LastChild;
+
+        public virtual XamlNode PreviousSubling
         {
             get;
         }
 
-        public virtual XamlNode FirstChild => ChildNodes.FirstOrDefault();
-
-        public virtual bool HasChildNodes => 0 < ChildNodes.Count;
+        public virtual XamlNode NextSubling
+        {
+            get;
+        }
 
         /// <summary>
         /// 
@@ -116,7 +123,25 @@ namespace LibraProgramming.Parsing.Xaml
             get;
         }
 
-        public virtual XamlNode LastChild => ChildNodes.LastOrDefault();
+        public virtual XamlNode LastChild => LastNode;
+
+        public virtual XamlDocument OwnerDocument
+        {
+            get
+            {
+                if (null == parent)
+                {
+                    throw new InvalidOperationException();
+                }
+
+                if (XamlNodeType.Document == parent.NodeType)
+                {
+                    return (XamlDocument) parent;
+                }
+
+                return parent.OwnerDocument;
+            }
+        }
 
         public virtual string Prefix
         {
@@ -139,27 +164,70 @@ namespace LibraProgramming.Parsing.Xaml
             set;
         }
 
-        protected XamlNode(XamlNodeType nodeType, XamlDocument document)
+        internal virtual XamlLinkedNode LastNode
+        {
+            get
+            {
+                return null;
+            }
+            set
+            {
+            }
+        }
+
+        protected internal virtual bool CanAcceptChilren => true;
+
+        internal XamlNode(XamlNodeType nodeType)
         {
             Attributes = new XamlAttributesCollection();
-            ChildNodes = new XamlNodeList();
             NodeType = nodeType;
-            parent = document;
         }
 
-        public IEnumerator<XamlNode> GetEnumerator()
+        protected XamlNode(XamlNodeType nodeType, XamlDocument document)
+            : this(nodeType)
         {
-            return ChildNodes.GetEnumerator();
+            SetParent(document);
         }
 
-        public XamlNode AppendChild(XamlNode node)
+        public IEnumerator GetEnumerator()
+        {
+            return new XamlNodeEnumerator(this);
+        }
+
+        public virtual XamlNode AppendChild(XamlNode node)
         {
             if (null == node)
             {
                 throw new ArgumentNullException(nameof(node));
             }
 
-            ChildNodes.Add(node);
+            if (false == CanAcceptChilren)
+            {
+                throw new InvalidOperationException();
+            }
+
+            if (ReferenceEquals(this, node) || IsDescendantOf(node))
+            {
+                throw new ArgumentException("", nameof(node));
+            }
+
+            node.ParentNode?.RemoveChild(node);
+
+            var last = LastNode;
+            var appendee = (XamlLinkedNode) node;
+
+            if (null == last)
+            {
+                appendee.Next = appendee;
+            }
+            else
+            {
+                appendee.Next = last.Next;
+                last.Next = appendee;
+            }
+
+            LastNode = appendee;
+            appendee.SetParent(this);
 
             return node;
         }
@@ -169,29 +237,89 @@ namespace LibraProgramming.Parsing.Xaml
             throw new NotImplementedException();
         }
 
-        public XamlNode RemoveChild(XamlNode node)
+        public virtual XamlNode RemoveChild(XamlNode node)
         {
             if (null == node)
             {
                 throw new ArgumentNullException(nameof(node));
             }
 
-            if (false == ChildNodes.Remove(node))
+            if (false == CanAcceptChilren)
             {
-                throw new ArgumentException("", nameof(node));
+                throw new InvalidOperationException();
+            }
+
+            if (false == ReferenceEquals(node.ParentNode, this))
+            {
+                throw new InvalidOperationException();
+            }
+
+            var removee = (XamlLinkedNode) node;
+
+            if (removee == FirstChild)
+            {
+                if (removee == LastNode)
+                {
+                    LastNode = null;
+                }
+                else
+                {
+                    LastNode.Next = removee.Next;
+                }
+
+                removee.Next = null;
+                removee.SetParent(null);
+            }
+            else
+            {
+                var previous = (XamlLinkedNode) removee.PreviousSubling;
+
+                if (removee == LastNode)
+                {
+                    LastNode = previous;
+                }
+
+                previous.Next = removee.Next;
+                removee.Next = null;
+                removee.SetParent(null);
             }
 
             return node;
         }
 
-        public void RemoveAll()
+        public virtual void RemoveAll()
         {
-            ChildNodes.Clear();
+            var child = FirstChild;
+
+            while (null != child)
+            {
+                var subling = child.NextSubling;
+
+                RemoveChild(child);
+                child = subling;
+            }
         }
 
-        IEnumerator IEnumerable.GetEnumerator()
+        protected internal void SetParent(XamlNode value)
         {
-            return GetEnumerator();
+            parent = value ?? OwnerDocument;
+        }
+
+        protected bool IsDescendantOf(XamlNode node)
+        {
+            var temp = ParentNode;
+
+            while (null != temp && ReferenceEquals(temp, this))
+            {
+                if (ReferenceEquals(temp, node))
+                {
+                    return true;
+                }
+
+                temp = temp.ParentNode;
+            }
+
+            return false;
         }
     }
 }

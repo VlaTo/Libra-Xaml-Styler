@@ -41,6 +41,10 @@
             }
         }
 
+        public override XamlNodeList ChildNodes => null;
+
+        protected internal override bool CanAcceptChilren => false;
+
         public XamlAttribute(XamlDocument document, XamlName name)
             : base(XamlNodeType.Attribute, document)
         {

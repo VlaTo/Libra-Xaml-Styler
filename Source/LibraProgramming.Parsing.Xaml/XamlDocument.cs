@@ -15,9 +15,15 @@ namespace LibraProgramming.Parsing.Xaml
 
         public override XamlNode ParentNode => null;
 
-        public XamlDocument()
-            : base(XamlNodeType.Document, null)
+        public XamlNode Root
         {
+            get;
+        }
+
+        public XamlDocument()
+            : base(XamlNodeType.Document)
+        {
+            Root = new XamlElement(this, XamlName.Create(null));
         }
 
         /// <summary>

@@ -4,10 +4,6 @@ namespace LibraProgramming.Parsing.Xaml.Visitors
 {
     public class XamlNodeVisitor
     {
-        protected XamlNodeVisitor()
-        {
-        }
-
         public virtual void Visit(XamlDocument document)
         {
             if (null == document)
@@ -20,22 +16,9 @@ namespace LibraProgramming.Parsing.Xaml.Visitors
 
         protected virtual void VisitDocument(XamlDocument document)
         {
-            foreach (var child in document.ChildNodes)
+            foreach (XamlNode child in document.ChildNodes)
             {
-                ProcessChildNode(child);
-            }
-        }
-
-        protected virtual void VisitNode(XamlNode node)
-        {
-            foreach (var attribute in node.Attributes)
-            {
-                VisitAttribute(attribute);
-            }
-
-            foreach (var child in node.ChildNodes)
-            {
-                ProcessChildNode(child);
+                ProcessChild(child);
             }
         }
 
@@ -49,33 +32,43 @@ namespace LibraProgramming.Parsing.Xaml.Visitors
 
         protected virtual void VisitElement(XamlElement element)
         {
-        }
-
-        private void ProcessChildNode(XamlNode node)
-        {
-            var comment = node as XamlComment;
-
-            if (null != comment)
+            foreach (var attribute in element.Attributes)
             {
-                VisitComment(comment);
+                VisitAttribute(attribute);
             }
-            else
+
+            foreach (XamlNode child in element.ChildNodes)
             {
-                ProcessChildElement(node);
+                ProcessChild(child);
             }
         }
 
-        private void ProcessChildElement(XamlNode node)
+        protected virtual void VisitUnknown(XamlNode node)
         {
-            var element = node as XamlElement;
+            throw new XamlParsingException();
+        }
 
-            if (null != element)
+        private void ProcessChild(XamlNode node)
+        {
+            switch (node.NodeType)
             {
-                VisitElement(element);
-            }
-            else
-            {
-                VisitNode(node);
+                case XamlNodeType.Comment:
+                {
+                    VisitComment((XamlComment) node);
+                    break;
+                }
+
+                case XamlNodeType.Element:
+                {
+                    VisitElement((XamlElement) node);
+                    break;
+                }
+
+                default:
+                {
+                    VisitUnknown(node);
+                    break;
+                }
             }
         }
     }
