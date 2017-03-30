@@ -58,6 +58,7 @@
     <Compile Include="XamlElement.cs" />
     <Compile Include="XamlLinkedNode.cs" />
     <Compile Include="XamlName.cs" />
+    <Compile Include="XamlNameBuilder.cs" />
     <Compile Include="XamlNamespaceManager.cs" />
     <Compile Include="XamlNamespaceScope.cs" />
     <Compile Include="XamlNodeEnumerator.cs" />

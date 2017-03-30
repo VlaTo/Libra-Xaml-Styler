@@ -45,6 +45,8 @@ namespace LibraProgramming.Parsing.Xaml
         {
             string prefix = null;
             string fullName = null;
+            string candidate = null;
+            var nameBuilder = new XamlNameBuilder();
             var done = false;
 
             while (false == done)
@@ -101,6 +103,7 @@ namespace LibraProgramming.Parsing.Xaml
                             throw new XamlParsingException();
                         }
 
+                        nameBuilder.Set
                         /*if (false == nameBuilder.IsEmpty)
                         {
                             throw new XamlParsingException();
@@ -198,6 +201,8 @@ namespace LibraProgramming.Parsing.Xaml
                         }
 
                         fullName = new StringBuilder(fullName).Append('.').Append(text).ToString();
+
+
                         token = await tokenizer.GetTokenAsync();
 
                         if (token.IsDot())
@@ -273,14 +278,41 @@ namespace LibraProgramming.Parsing.Xaml
 
                     case ParserState.OpeningTagNameWhitespace:
                     {
-                        string text;
+//                        string text;
                         var token = await tokenizer.GetTokenAsync();
 
-                        if (false == token.IsString(out text))
+                        if (false == token.IsString(out candidate))
                         {
                             throw new XamlParsingException();
                         }
+
+                        state = ParserState.OpeningTagAttributeName;
+
                         break;
+                    }
+
+                    case ParserState.OpeningTagAttributeName:
+                    {
+                        var token = await tokenizer.GetTokenAsync();
+
+                        if (token.IsColon())
+                        {
+                            state = ParserState.OpeningTagAttributeNamespaceColon;
+                            break;
+                        }
+
+                        if (token.IsDot())
+                        {
+                            state = ParserState.OpeningTagAttributeNameDot;
+                            break;
+                        }
+
+                        if (token.IsWhitespace())
+                        {
+                            break;
+                        }
+
+                        throw new XamlParsingException();
                     }
 
                     case ParserState.ClosingTagBegin:
@@ -429,7 +461,11 @@ namespace LibraProgramming.Parsing.Xaml
             ClosingTagBegin,
             ClosingTagNamespaceColon,
             ClosingTagNameDot,
-            ClosingTagNameClose
+            ClosingTagNameClose,
+            OpeningTagAttributeNamespaceColon,
+            OpeningTagAttributeNameDot,
+            OpeningTagAttributeName,
+            OpeningTagBegin
         }
     }
 }
