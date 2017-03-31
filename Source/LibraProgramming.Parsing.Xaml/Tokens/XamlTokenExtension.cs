@@ -34,7 +34,14 @@ namespace LibraProgramming.Parsing.Xaml.Tokens
                 throw new ArgumentNullException(nameof(token));
             }
 
-            return CheckTerm(token, XamlTerminal.Whitespace);
+            if (XamlTokenType.Terminal != token.TokenType)
+            {
+                return false;
+            }
+
+            var term = ((XamlTerminalToken) token).Term;
+
+            return term == XamlTerminals.Whitespace || term == '\t' || term == '\r' || term == '\n';
         }
 
         /// <summary>
@@ -44,62 +51,77 @@ namespace LibraProgramming.Parsing.Xaml.Tokens
         /// <returns></returns>
         public static bool IsOpenBracket(this XamlToken token)
         {
-            return IsTerm(token, XamlTerminal.OpenAngleBracket);
+            return CheckIsTerminal(token, XamlTerminals.OpenAngleBracket);
         }
         
         /// <summary>
         /// 
         /// </summary>
         /// <param name="token"></param>
-        /// <param name="term"></param>
         /// <returns></returns>
         public static bool IsColon(this XamlToken token)
         {
-            return IsTerm(token, XamlTerminal.Colon);
+            return CheckIsTerminal(token, XamlTerminals.Colon);
         }
         
         /// <summary>
         /// 
         /// </summary>
         /// <param name="token"></param>
-        /// <param name="term"></param>
         /// <returns></returns>
         public static bool IsDot(this XamlToken token)
         {
-            return IsTerm(token, XamlTerminal.Dot);
+            return CheckIsTerminal(token, XamlTerminals.Dot);
         }
         
         /// <summary>
         /// 
         /// </summary>
         /// <param name="token"></param>
-        /// <param name="term"></param>
+        /// <returns></returns>
+        public static bool IsDoubleQuote(this XamlToken token)
+        {
+            return CheckIsTerminal(token, XamlTerminals.DoubleQuote);
+        }
+        
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="token"></param>
+        /// <returns></returns>
+        public static bool IsSingleQuote(this XamlToken token)
+        {
+            return CheckIsTerminal(token, XamlTerminals.SingleQuote);
+        }
+        
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="token"></param>
         /// <returns></returns>
         public static bool IsEqual(this XamlToken token)
         {
-            return IsTerm(token, XamlTerminal.Equal);
+            return CheckIsTerminal(token, XamlTerminals.Equal);
         }
         
         /// <summary>
         /// 
         /// </summary>
         /// <param name="token"></param>
-        /// <param name="term"></param>
         /// <returns></returns>
         public static bool IsSlash(this XamlToken token)
         {
-            return IsTerm(token, XamlTerminal.Slash);
+            return CheckIsTerminal(token, XamlTerminals.Slash);
         }
         
         /// <summary>
         /// 
         /// </summary>
         /// <param name="token"></param>
-        /// <param name="term"></param>
         /// <returns></returns>
         public static bool IsCloseBracket(this XamlToken token)
         {
-            return IsTerm(token, XamlTerminal.CloseAngleBracket);
+            return CheckIsTerminal(token, XamlTerminals.CloseAngleBracket);
         }
 
         /// <summary>
@@ -108,14 +130,20 @@ namespace LibraProgramming.Parsing.Xaml.Tokens
         /// <param name="token"></param>
         /// <param name="term"></param>
         /// <returns></returns>
-        public static bool IsTerm(this XamlToken token, XamlTerminal term)
+        public static bool IsTerminal(this XamlToken token, ref char term)
         {
             if (null == token)
             {
                 throw new ArgumentNullException(nameof(token));
             }
 
-            return CheckTerm(token, term);
+            if (XamlTokenType.Terminal == token.TokenType)
+            {
+                term = ((XamlTerminalToken) token).Term;
+                return true;
+            }
+
+            return false;
         }
 
         /// <summary>
@@ -142,8 +170,13 @@ namespace LibraProgramming.Parsing.Xaml.Tokens
             return false;
         }
 
-        private static bool CheckTerm(XamlToken token, XamlTerminal term)
+        private static bool CheckIsTerminal(XamlToken token, char term)
         {
+            if (null == token)
+            {
+                throw new ArgumentNullException(nameof(token));
+            }
+
             if (XamlTokenType.Terminal != token.TokenType)
             {
                 return false;

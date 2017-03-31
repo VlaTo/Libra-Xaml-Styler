@@ -12,12 +12,12 @@ namespace LibraProgramming.Parsing.Xaml.Tokens
         /// <summary>
         /// 
         /// </summary>
-        public XamlTerminal Term
+        public char Term
         {
             get;
         }
 
-        public XamlTerminalToken(XamlTerminal term)
+        public XamlTerminalToken(char term)
             : base(XamlTokenType.Terminal)
         {
             Term = term;
@@ -28,7 +28,7 @@ namespace LibraProgramming.Parsing.Xaml.Tokens
         {
             private readonly XamlTerminalToken token;
 
-            public XamlTerminal Terminal => token.Term;
+            public char Terminal => token.Term;
 
             public DebugView(XamlTerminalToken token)
             {

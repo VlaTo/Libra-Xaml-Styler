@@ -8,23 +8,23 @@ namespace LibraProgramming.Parsing.Xaml
 {
     internal sealed class XamlTokenizer : IDisposable
     {
-        private const int Eof = -1;
+        private const int EndOfStream = -1;
 
         private readonly TextReader reader;
         private readonly char[] buffer;
         private bool disposed;
         private TokenizerState state;
-        private int bufferCount;
-        private int bufferPosition;
-        private bool ended;
+        private int count;
+        private int position;
+        private bool eof;
 
         public XamlTokenizer(TextReader reader, int bufferSize)
         {
             this.reader = reader;
-            state = TokenizerState.Normal;
+            state = TokenizerState.Unknown;
             buffer = new char[bufferSize];
-            bufferCount = 0;
-            bufferPosition = 0;
+            count = 0;
+            position = 0;
         }
 
         public void Dispose()
@@ -40,57 +40,56 @@ namespace LibraProgramming.Parsing.Xaml
             {
                 switch (state)
                 {
+
+                    case TokenizerState.Unknown:
+                    {
+                        var flag = await AdvancePosition();
+
+                        if (flag)
+                        {
+                            state = TokenizerState.Reading;
+                            break;
+                        }
+
+                        state = TokenizerState.Failed;
+
+                        break;
+                    }
+
                     case TokenizerState.EndOfDocument:
                     {
                         return XamlToken.End;
                     }
 
-                    case TokenizerState.Normal:
+                    case TokenizerState.Reading:
                     {
-                        var input = await ReadNextCharAsync(false);
+                        var input = ReadCurrentChar();
 
-                        if (Eof == input)
+                        if (EndOfStream == input)
                         {
                             state = TokenizerState.EndOfDocument;
+                            break;
+                        }
 
+                        var current = (char) input;
+
+                        if (IsTerm(current))
+                        {
                             if (0 < text.Length)
                             {
                                 return XamlToken.String(text.ToString());
                             }
 
-                            return XamlToken.End;
+                            await AdvancePosition();
+
+                            return XamlToken.Terminal(current);
                         }
 
-                        var current = (char) input;
+                        text.Append(current);
 
-                        if (Char.IsWhiteSpace(current))
-                        {
-                            await ReadNextCharAsync(true);
-                            return XamlToken.Terminal(XamlTerminal.Whitespace);
-                        }
-
-                        var term = GetTermFromChar(current);
-
-                        if (XamlTerminal.Unknown == term)
-                        {
-                            text.Append((char) await ReadNextCharAsync(true));
-                        }
-                        else if (0 < text.Length)
-                        {
-                            return XamlToken.String(text.ToString());
-                        }
-                        else
-                        {
-                            await ReadNextCharAsync(true);
-                            return XamlToken.Terminal(term);
-                        }
+                        await AdvancePosition();
 
                         break;
-                    }
-
-                    case TokenizerState.Unknown:
-                    {
-                        throw new Exception();
                     }
 
                     default:
@@ -101,11 +100,33 @@ namespace LibraProgramming.Parsing.Xaml
             }
         }
 
+        private static bool IsTerm(char ch)
+        {
+            char[] terminals =
+            {
+                XamlTerminals.OpenAngleBracket,
+                XamlTerminals.CloseAngleBracket,
+                XamlTerminals.Colon,
+                XamlTerminals.Dot,
+                XamlTerminals.Equal,
+                XamlTerminals.DoubleQuote,
+                XamlTerminals.SingleQuote,
+                XamlTerminals.Slash,
+                XamlTerminals.Whitespace,
+                '\t',
+                '\r',
+                '\n'
+            };
+
+            return 0 <= Array.IndexOf(terminals, ch);
+        }
+
+/*
         private static XamlTerminal GetTermFromChar(char ch)
         {
             char[] terminals =
             {
-                '<', ':', '.', '=', '/', '>'
+                '<', ':', '.', '=', '\"','\'', '/', '>', ' ', '\t', '\r', '\n'
             };
             XamlTerminal[] values =
             {
@@ -113,8 +134,14 @@ namespace LibraProgramming.Parsing.Xaml
                 XamlTerminal.Colon,
                 XamlTerminal.Dot,
                 XamlTerminal.Equal,
+                XamlTerminal.DoubleQuote,
+                XamlTerminal.SingleQuote,
                 XamlTerminal.Slash,
-                XamlTerminal.CloseAngleBracket
+                XamlTerminal.CloseAngleBracket,
+                XamlTerminal.Whitespace, 
+                XamlTerminal.Whitespace, 
+                XamlTerminal.Whitespace, 
+                XamlTerminal.Whitespace
             };
             var index = Array.IndexOf(terminals, ch);
 
@@ -125,6 +152,7 @@ namespace LibraProgramming.Parsing.Xaml
 
             return values[index];
         }
+*/
 
         private void Dispose(bool dispose)
         {
@@ -146,21 +174,18 @@ namespace LibraProgramming.Parsing.Xaml
             }
         }
 
-        internal async Task<int> ReadNextCharAsync(bool advance)
+        internal int ReadCurrentChar()
         {
-            if (ended)
-            {
-                return Eof;
-            }
+            return eof ? EndOfStream : buffer[position];
 
-            if (bufferPosition == bufferCount)
+            /*if (bufferPosition == bufferCount)
             {
                 var count = await reader.ReadBlockAsync(buffer, 0, buffer.Length);
 
                 if (0 == count)
                 {
-                    ended = true;
-                    return Eof;
+                    eof = true;
+                    return EndOfStream;
                 }
 
                 bufferCount = count;
@@ -172,21 +197,40 @@ namespace LibraProgramming.Parsing.Xaml
             if (advance)
             {
                 bufferPosition++;
+            }*/
+        }
+
+        private async Task<bool> AdvancePosition()
+        {
+            if (eof)
+            {
+                return false;
             }
 
-            return buffer[position];
+            if (position == count)
+            {
+                count = await reader.ReadBlockAsync(buffer, 0, buffer.Length);
+                position = 0;
+
+                if (0 == count)
+                {
+                    eof = true;
+                    return false;
+                }
+
+                return true;
+            }
+
+            position++;
+
+            return true;
         }
 
         private enum TokenizerState
         {
             Failed = -1,
             Unknown,
-            Normal,
-            NodeBeginTerminal,
-            TagOrAliasBegin,
-
-            MultilineCommentProbe1,
-
+            Reading,
             EndOfDocument
         }
     }

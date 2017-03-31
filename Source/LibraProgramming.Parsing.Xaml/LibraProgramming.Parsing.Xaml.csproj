@@ -83,6 +83,7 @@
     <Compile Include="DocumentReformatSettings.cs" />
     <Compile Include="XamlTerminal.cs" />
     <Compile Include="XamlTokenizer.cs" />
+    <Compile Include="XamlValueBuilder.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Localization\Neutral\Resource.resx">

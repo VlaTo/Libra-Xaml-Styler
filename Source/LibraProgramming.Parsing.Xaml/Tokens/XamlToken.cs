@@ -20,6 +20,7 @@ namespace LibraProgramming.Parsing.Xaml.Tokens
     internal class XamlToken
     {
         public static readonly XamlToken End;
+        public static readonly XamlToken Unknown;
 
         public XamlTokenType TokenType
         {
@@ -31,11 +32,16 @@ namespace LibraProgramming.Parsing.Xaml.Tokens
         /// </summary>
         /// <param name="term"></param>
         /// <returns></returns>
-        public static XamlTerminalToken Terminal(XamlTerminal term)
+        public static XamlTerminalToken Terminal(char term)
         {
             return new XamlTerminalToken(term);
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="text"></param>
+        /// <returns></returns>
         public static XamlStringToken String(string text)
         {
             return new XamlStringToken(text);
@@ -49,6 +55,7 @@ namespace LibraProgramming.Parsing.Xaml.Tokens
         static XamlToken()
         {
             End = new XamlToken(XamlTokenType.End);
+            Unknown = new XamlToken(XamlTokenType.Unknown);
         }
     }
 }

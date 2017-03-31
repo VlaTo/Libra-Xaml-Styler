@@ -5,6 +5,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace UnitTests
 {
+/*
     [TestClass]
     public class TokenizerTestFixture
     {
@@ -15,10 +16,10 @@ namespace UnitTests
             {
                 var tokenizer = new XamlTokenizer(reader, 2);
 
-                Assert.AreEqual('A', await tokenizer.ReadNextCharAsync(true));
-                Assert.AreEqual('B', await tokenizer.ReadNextCharAsync(true));
-                Assert.AreEqual('C', await tokenizer.ReadNextCharAsync(true));
-                Assert.AreEqual(-1, await tokenizer.ReadNextCharAsync(true));
+                Assert.AreEqual('A', await tokenizer.ReadCurrentChar(true));
+                Assert.AreEqual('B', await tokenizer.ReadCurrentChar(true));
+                Assert.AreEqual('C', await tokenizer.ReadCurrentChar(true));
+                Assert.AreEqual(-1, await tokenizer.ReadCurrentChar(true));
             }
         }
 
@@ -29,10 +30,10 @@ namespace UnitTests
             {
                 var tokenizer = new XamlTokenizer(reader, 2);
 
-                Assert.AreEqual('A', await tokenizer.ReadNextCharAsync(false));
-                Assert.AreEqual('A', await tokenizer.ReadNextCharAsync(true));
-                Assert.AreEqual('B', await tokenizer.ReadNextCharAsync(true));
-                Assert.AreEqual(-1, await tokenizer.ReadNextCharAsync(true));
+                Assert.AreEqual('A', await tokenizer.ReadCurrentChar(false));
+                Assert.AreEqual('A', await tokenizer.ReadCurrentChar(true));
+                Assert.AreEqual('B', await tokenizer.ReadCurrentChar(true));
+                Assert.AreEqual(-1, await tokenizer.ReadCurrentChar(true));
             }
         }
 
@@ -43,14 +44,32 @@ namespace UnitTests
             {
                 var tokenizer = new XamlTokenizer(reader, 2);
 
-                Assert.AreEqual('A', await tokenizer.ReadNextCharAsync(false));
-                Assert.AreEqual('A', await tokenizer.ReadNextCharAsync(true));
-                Assert.AreEqual('B', await tokenizer.ReadNextCharAsync(true));
-                Assert.AreEqual('C', await tokenizer.ReadNextCharAsync(false));
-                Assert.AreEqual('C', await tokenizer.ReadNextCharAsync(true));
-                Assert.AreEqual('D', await tokenizer.ReadNextCharAsync(true));
-                Assert.AreEqual(-1, await tokenizer.ReadNextCharAsync(true));
+                Assert.AreEqual('A', await tokenizer.ReadCurrentChar(false));
+                Assert.AreEqual('A', await tokenizer.ReadCurrentChar(true));
+                Assert.AreEqual('B', await tokenizer.ReadCurrentChar(true));
+                Assert.AreEqual('C', await tokenizer.ReadCurrentChar(false));
+                Assert.AreEqual('C', await tokenizer.ReadCurrentChar(true));
+                Assert.AreEqual('D', await tokenizer.ReadCurrentChar(true));
+                Assert.AreEqual(-1, await tokenizer.ReadCurrentChar(true));
+            }
+        }
+
+        [TestMethod]
+        public async Task TestMethod4()
+        {
+            using (var reader = new StringReader("AB CD"))
+            {
+                var tokenizer = new XamlTokenizer(reader, 2);
+
+                Assert.AreEqual('A', await tokenizer.ReadCurrentChar(false));
+                Assert.AreEqual('A', await tokenizer.ReadCurrentChar(true));
+                Assert.AreEqual('B', await tokenizer.ReadCurrentChar(true));
+                Assert.AreEqual('C', await tokenizer.ReadCurrentChar(false));
+                Assert.AreEqual('C', await tokenizer.ReadCurrentChar(true));
+                Assert.AreEqual('D', await tokenizer.ReadCurrentChar(true));
+                Assert.AreEqual(-1, await tokenizer.ReadCurrentChar(true));
             }
         }
     }
+*/
 }

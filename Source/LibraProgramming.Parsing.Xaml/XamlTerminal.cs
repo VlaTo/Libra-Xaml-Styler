@@ -1,25 +1,16 @@
 ﻿namespace LibraProgramming.Parsing.Xaml
 {
-    /// <summary>
-    /// 
-    /// </summary>
-    internal enum XamlTerminal
+    internal static class XamlTerminals
     {
-        /// <summary>
-        /// 
-        /// </summary>
-        Unknown = -1,
-
-        /// <summary>
-        /// 
-        /// </summary>
-        End,
-        OpenAngleBracket,
-        Whitespace,
-        Equal,
-        CloseAngleBracket,
-        Slash,
-        Dot,
-        Colon
+        public const char OpenAngleBracket = '<';
+        public const char CloseAngleBracket = '>';
+        public const char Whitespace = ' ';
+        public const char Equal = '=';
+        public const char Slash = '/';
+        public const char Backslash = '\\';
+        public const char Dot = '.';
+        public const char Colon = ':';
+        public const char SingleQuote = '\'';
+        public const char DoubleQuote = '\"';
     }
 }
