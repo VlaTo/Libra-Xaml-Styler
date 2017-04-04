@@ -30,6 +30,12 @@ namespace LibraProgramming.Parsing.Xaml
             }
         }
 
+        internal override XamlLinkedNode LastNode
+        {
+            get;
+            set;
+        }
+
         /*public XamlElement this[string n]
         {
             get
@@ -75,15 +81,19 @@ namespace LibraProgramming.Parsing.Xaml
 
         internal XamlName XamlName => name;
 
-        public XamlElement(XamlDocument document, XamlName name)
-            : this(XamlNodeType.Element, document)
+        public XamlElement(XamlDocument document, XamlName name, bool inlined = false)
+            : this(XamlNodeType.Element, document, inlined)
         {
             this.name = name;
         }
 
-        protected XamlElement(XamlNodeType nodeType, XamlDocument document)
+        protected XamlElement(XamlNodeType nodeType, XamlDocument document, bool inlined = false)
             : base(nodeType, document, null)
         {
+            if (inlined)
+            {
+                LastNode = this;
+            }
         }
     }
 }
