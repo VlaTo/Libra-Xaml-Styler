@@ -21,7 +21,7 @@ namespace LibraProgramming.Parsing.Xaml
             }
         }
 
-        public XamlChildNodes(XamlNode container)
+        internal XamlChildNodes(XamlNode container)
         {
             this.container = container;
         }

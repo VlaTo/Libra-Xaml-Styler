@@ -13,14 +13,16 @@ namespace LibraProgramming.VS2015.Package.Commands
     {
         private readonly DTE dte;
         private readonly IOutputProvider output;
+        private readonly DocumentReformatSettings settings;
 
         /// <summary>
         /// Инициализирует новый экземпляр класса <see cref="T:System.Object"/>.
         /// </summary>
-        public FormatDocumentCommand(DTE dte, IOutputProvider output)
+        public FormatDocumentCommand(DTE dte, IOutputProvider output, DocumentReformatSettings settings)
         {
             this.dte = dte;
             this.output = output;
+            this.settings = settings;
         }
 
         public bool CanExecute(Document document)
@@ -98,20 +100,30 @@ namespace LibraProgramming.VS2015.Package.Commands
             }
         }
 
-        private static async Task ReformatSourceAsync(EditPoint start, EditPoint end)
+        private async Task ReformatSourceAsync(EditPoint start, EditPoint end)
         {
             using (var reader = new StringReader(start.GetText(end)))
             {
                 var document = await XamlDocument.ParseAsync(reader);
                 var text = new StringBuilder();
 
-                using (var writer = new StringWriter(text))
-                {
-                    var visitor = new ReformatXamlVisitor(writer, new DocumentReformatSettings());
-                    visitor.Visit(document);
-                }
+                ReformatDocument(document, text, settings);
 
-                start.ReplaceText(end, text.ToString(), 0);
+                var flag = (int) vsEPReplaceTextOptions.vsEPReplaceTextKeepMarkers;
+
+                start.ReplaceText(end, text.ToString(), flag);
+            }
+        }
+
+        private static void ReformatDocument(XamlDocument document, StringBuilder text,
+            DocumentReformatSettings reformatSettings)
+        {
+            var textWriter = new StringWriter(text);
+
+            using (var writer = new XamlWriter(textWriter))
+            {
+                var visitor = new ReformatXamlVisitor(writer, reformatSettings);
+                visitor.Visit(document);
             }
         }
     }

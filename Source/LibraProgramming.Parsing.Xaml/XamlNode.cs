@@ -1,9 +1,5 @@
 ﻿using System;
 using System.Collections;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Linq;
-using System.Runtime.InteropServices;
 
 namespace LibraProgramming.Parsing.Xaml
 {
@@ -31,13 +27,6 @@ namespace LibraProgramming.Parsing.Xaml
         /// 
         /// </summary>
         Document
-    }
-
-    /// <summary>
-    /// 
-    /// </summary>
-    public sealed class XamlAttributesCollection : Collection<XamlAttribute>
-    {
     }
 
     /// <summary>

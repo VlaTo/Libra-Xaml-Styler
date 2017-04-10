@@ -86,14 +86,14 @@ namespace LibraProgramming.VS2015.Package
                 throw new ArgumentNullException(nameof(dte));
             }
 
-            var pane = GetService(typeof(SVsGeneralOutputWindowPane)) as IVsOutputWindowPane;
+            var windowPane = GetService(typeof(SVsGeneralOutputWindowPane)) as IVsOutputWindowPane;
 
-            if (null == pane)
+            if (null == windowPane)
             {
-                throw new ArgumentNullException(nameof(pane));
+                throw new ArgumentNullException(nameof(windowPane));
             }
 
-            output = new VisualStudioOutputPaneProvider(pane);
+            output = new VisualStudioOutputPaneProvider(windowPane);
 
             formatDocumentEvent = dte.Events.CommandEvents[VsStd2KCmdIdGuid, (int) VSConstants.VSStd2KCmdID.FORMATDOCUMENT];
             saveProjectItemEvent = dte.Events.CommandEvents[VsStd97CmdIdGuid, (int) VSConstants.VSStd97CmdID.SaveProjectItem];

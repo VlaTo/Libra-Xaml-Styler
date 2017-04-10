@@ -4,42 +4,95 @@ namespace LibraProgramming.Parsing.Xaml
 {
     public class XamlName : IEquatable<XamlName>
     {
-        private string ns;
+        private string name;
+        private int localNameHash;
 
         public string Prefix
         {
             get;
         }
 
-        public string Name
+        public string LocalName
         {
             get;
         }
 
-        public string LocalName
+        public string Name
         {
             get
             {
-                var position = Name.IndexOf('.');
-                return 0 > position ? Name : Name.Substring(0, position);
+                if (null == name)
+                {
+                    if (0 < Prefix.Length)
+                    {
+                        if (0 < LocalName.Length)
+                        {
+                            var n = String.Concat(Prefix, ':', LocalName);
+
+                            lock (Document.NameTable)
+                            {
+                                if (name == null)
+                                {
+                                    name = Document.NameTable.Add(n);
+                                }
+                            }
+                        }
+                        else
+                        {
+                            name = Prefix;
+                        }
+                    }
+                    else
+                    {
+                        name = LocalName;
+                    }
+                }
+
+                return name;
             }
         }
 
-        public static XamlName Create(string prefix, string name, string ns)
+        public string NamespaceURI
         {
-            return new XamlName(prefix, name, ns);
+            get;
         }
 
-        public static XamlName Create(string name, string ns = null)
+        public int HashCode
         {
-            return Create(null, name, ns);
+            get;
         }
 
-        internal XamlName(string prefix, string name, string ns)
+        internal int LocalNameHashCode
+        {
+            get
+            {
+                if (0 == localNameHash)
+                {
+                    localNameHash = LocalName.GetHashCode();
+                }
+
+                return localNameHash;
+            }
+        }
+
+        internal XamlDocument Document
+        {
+            get;
+        }
+
+        internal XamlName Next
+        {
+            get;
+        }
+
+        internal XamlName(string prefix, string localName, string ns, int hashCode, XamlDocument document, XamlName next)
         {
             Prefix = prefix;
-            Name = name;
-            this.ns = ns;
+            LocalName = localName;
+            NamespaceURI = ns;
+            HashCode = hashCode;
+            Document = document;
+            Next = next;
         }
 
         public override bool Equals(object obj)
@@ -71,21 +124,26 @@ namespace LibraProgramming.Parsing.Xaml
 
             return AreSame(Prefix, other.Prefix)
                    && String.Equals(Name, other.Name, StringComparison.Ordinal)
-                   && AreSame(ns, other.ns);
+                   && AreSame(NamespaceURI, other.NamespaceURI);
         }
 
         public override int GetHashCode()
         {
-            unchecked
-            {
-                var hashCode = ns?.GetHashCode() ?? 0;
-
-                hashCode = (hashCode * 0x18D) ^ (Prefix?.GetHashCode() ?? 0);
-                hashCode = (hashCode * 0x18D) ^ (Name?.GetHashCode() ?? 0);
-
-                return hashCode;
-            }
+            return HashCode;
+/*
+                        unchecked
+                        {
+                            var hashCode = NamespaceURI?.GetHashCode() ?? 0;
+            
+                            hashCode = (hashCode * 0x18D) ^ (Prefix?.GetHashCode() ?? 0);
+                            hashCode = (hashCode * 0x18D) ^ (Name?.GetHashCode() ?? 0);
+            
+                            return hashCode;
+                        }
+            */
         }
+
+        public int 
 
         public static bool operator ==(XamlName left, XamlName right)
         {

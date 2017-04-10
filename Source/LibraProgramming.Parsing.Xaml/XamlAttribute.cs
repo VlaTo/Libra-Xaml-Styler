@@ -2,11 +2,11 @@
 {
     public sealed class XamlAttribute : XamlNode
     {
-        private readonly XamlName name;
+        public override string Name => XamlName.Name;
 
-        public override string Name => name.Name;
+        public override string Prefix => XamlName.Prefix;
 
-        public override string Prefix => name.Prefix;
+        public override string NamespaceURI => XamlName.NamespaceURI;
 
 /*
         public XamlNode Node
@@ -43,12 +43,17 @@
 
         public override XamlNodeList ChildNodes => null;
 
+        internal XamlName XamlName
+        {
+            get;
+        }
+
         protected internal override bool CanAcceptChilren => false;
 
         public XamlAttribute(XamlDocument document, XamlName name)
             : base(XamlNodeType.Attribute, document)
         {
-            this.name = name;
+            XamlName = name;
         }
     }
 }

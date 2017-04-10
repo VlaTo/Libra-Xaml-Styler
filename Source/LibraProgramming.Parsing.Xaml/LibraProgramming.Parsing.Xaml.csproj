@@ -48,12 +48,16 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Core\XamlDocumentValidator.cs" />
+    <Compile Include="EmptyEnumerator.cs" />
     <Compile Include="Tokens\XamlStringToken.cs" />
     <Compile Include="Tokens\XamlTerminalToken.cs" />
     <Compile Include="Tokens\XamlToken.cs" />
     <Compile Include="Tokens\XamlTokenExtension.cs" />
+    <Compile Include="XamlAttributesCollection.XamlAttributesArray.cs" />
+    <Compile Include="XamlAttributesCollection.cs" />
     <Compile Include="XamlChildNodes.cs" />
     <Compile Include="XamlComment.cs" />
+    <Compile Include="XamlContent.cs" />
     <Compile Include="XamlDocument.cs" />
     <Compile Include="XamlElement.cs" />
     <Compile Include="XamlLinkedNode.cs" />
@@ -82,8 +86,10 @@
     <Compile Include="XamlParser.cs" />
     <Compile Include="DocumentReformatSettings.cs" />
     <Compile Include="XamlTerminal.cs" />
+    <Compile Include="XamlTextContent.cs" />
     <Compile Include="XamlTokenizer.cs" />
     <Compile Include="XamlValueBuilder.cs" />
+    <Compile Include="XamlWriter.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Localization\Neutral\Resource.resx">

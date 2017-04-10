@@ -6,10 +6,10 @@ namespace LibraProgramming.Parsing.Xaml.Visitors
 {
     public class ReformatXamlVisitor : XamlNodeVisitor
     {
-        private readonly TextWriter writer;
+        private readonly XamlWriter writer;
         private readonly DocumentReformatSettings settings;
 
-        public ReformatXamlVisitor(TextWriter writer, DocumentReformatSettings settings)
+        public ReformatXamlVisitor(XamlWriter writer, DocumentReformatSettings settings)
         {
             this.writer = writer;
             this.settings = settings;
@@ -22,8 +22,9 @@ namespace LibraProgramming.Parsing.Xaml.Visitors
 
         protected override void VisitAttribute(XamlAttribute attribute)
         {
-            writer.Write(CreateNameString(attribute));
-            writer.Write('=');
+            writer.WriteStartAttribute(attribute.Prefix, attribute.LocalName, attribute.NamespaceURI);
+            writer.WriteAttributeContent(CreateAttributeContent(attribute));
+            writer.WriteEndAttribute();
         }
 
         protected override void VisitComment(XamlComment comment)
@@ -33,7 +34,7 @@ namespace LibraProgramming.Parsing.Xaml.Visitors
 
         protected override void VisitElement(XamlElement element)
         {
-            var name = CreateNameString(element);
+            /*var name = CreateNameString(element);
 
             writer.Write('<');
             writer.Write(name);
@@ -48,19 +49,20 @@ namespace LibraProgramming.Parsing.Xaml.Visitors
                 writer.Write('/');
             }
 
-            writer.Write('>');
+            writer.Write('>');*/
 
             if (element.HasChildNodes)
             {
                 base.VisitElement(element);
 
-                writer.Write('<');
+                /*writer.Write('<');
                 writer.Write('/');
                 writer.Write(name);
-                writer.Write('>');
+                writer.Write('>');*/
             }
         }
 
+/*
         private string CreateNameString(XamlNode node)
         {
             var name = new StringBuilder();
@@ -72,6 +74,12 @@ namespace LibraProgramming.Parsing.Xaml.Visitors
             }
 
             return name.Append(node.Name).ToString();
+        }
+*/
+
+        private XamlContent CreateAttributeContent(XamlAttribute attribute)
+        {
+            return new XamlTextContent(attribute.Value);
         }
     }
 }

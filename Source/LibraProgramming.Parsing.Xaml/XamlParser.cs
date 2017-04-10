@@ -165,58 +165,17 @@ namespace LibraProgramming.Parsing.Xaml
 
                     case ParserState.OpeningTagTrailing:
                     {
-                        var token = await tokenizer.GetTokenAsync();
-
-                        if (token.IsWhitespace())
+                        state = await ParseOpeningTagTrailingAsync(text =>
                         {
-                            break;
-                        }
-
-                        string text;
-
-                        if (token.IsString(out text))
-                        {
-                            state = ParserState.OpeningTagAttributeName;
-                            break;
-                        }
-
-                        if (token.IsSlash())
-                        {
-                            state = ParserState.OpeningTagNameSlash;
-                            break;
-                        }
-
-                        throw new XamlParsingException();
+                            nameBuilder.Name = text;
+                        });
+                        break;
                     }
 
                     case ParserState.OpeningTagAttributeName:
                     {
-                        var token = await tokenizer.GetTokenAsync();
-
-                        if (token.IsColon())
-                        {
-                            state = ParserState.OpeningTagAttributeNamespaceColon;
-                            break;
-                        }
-
-                        if (token.IsDot())
-                        {
-                            state = ParserState.OpeningTagAttributeNameDot;
-                            break;
-                        }
-
-                        if (token.IsEqual())
-                        {
-                            state = ParserState.OpeningTagAttributeNameEnd;
-                            break;
-                        }
-
-                        if (token.IsWhitespace())
-                        {
-                            break;
-                        }
-
-                        throw new XamlParsingException();
+                        state = await ParseOpeningTagAttributeNameAsync();
+                        break;
                     }
 
                     case ParserState.OpeningTagAttributeNameEnd:
@@ -283,6 +242,7 @@ namespace LibraProgramming.Parsing.Xaml
 
                     case ParserState.OpeningTagAttributeQuotedValueEnd:
                     {
+                            element.Attributes.Add();
                         state = ParserState.OpeningTagAttributeValueEnd;
                         break;
                     }
@@ -418,6 +378,58 @@ namespace LibraProgramming.Parsing.Xaml
                     }
                 }
             }
+        }
+
+        private async Task<ParserState> ParseOpeningTagAttributeNameAsync()
+        {
+            var token = await tokenizer.GetTokenAsync();
+
+            if (token.IsColon())
+            {
+                return ParserState.OpeningTagAttributeNamespaceColon;
+            }
+
+            if (token.IsDot())
+            {
+                return ParserState.OpeningTagAttributeNameDot;
+            }
+
+            if (token.IsEqual())
+            {
+                return ParserState.OpeningTagAttributeNameEnd;
+            }
+
+            if (token.IsWhitespace())
+            {
+                return ParserState.OpeningTagAttributeName;
+            }
+
+            throw new XamlParsingException();
+        }
+
+        private async Task<ParserState> ParseOpeningTagTrailingAsync(Action<string> callback)
+        {
+            var token = await tokenizer.GetTokenAsync();
+
+            if (token.IsWhitespace())
+            {
+                return ParserState.OpeningTagTrailing;
+            }
+
+            string text;
+
+            if (token.IsString(out text))
+            {
+                callback.Invoke(text);
+                return ParserState.OpeningTagAttributeName;
+            }
+
+            if (token.IsSlash())
+            {
+                return ParserState.OpeningTagNameSlash;
+            }
+
+            throw new XamlParsingException();
         }
 
         private static ParserState ParseOpeningTagClosed(Stack<XamlNode> nodes, XamlElement element)
