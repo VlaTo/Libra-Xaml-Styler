@@ -65,6 +65,7 @@
     <Compile Include="XamlNameBuilder.cs" />
     <Compile Include="XamlNamespaceManager.cs" />
     <Compile Include="XamlNamespaceScope.cs" />
+    <Compile Include="XamlNameTable.cs" />
     <Compile Include="XamlNodeEnumerator.cs" />
     <Compile Include="XamlNodeList.cs" />
     <Compile Include="XamlParsingException.cs" />
@@ -85,6 +86,8 @@
     <Compile Include="Visitors\XamlNodeVisitor.cs" />
     <Compile Include="XamlParser.cs" />
     <Compile Include="DocumentReformatSettings.cs" />
+    <Compile Include="XamlReservedNamespaces.cs" />
+    <Compile Include="XamlRootElement.cs" />
     <Compile Include="XamlTerminal.cs" />
     <Compile Include="XamlTextContent.cs" />
     <Compile Include="XamlTokenizer.cs" />

@@ -2,6 +2,9 @@
 
 namespace LibraProgramming.Parsing.Xaml
 {
+    /// <summary>
+    /// 
+    /// </summary>
     public class XamlName : IEquatable<XamlName>
     {
         private string name;
@@ -29,13 +32,14 @@ namespace LibraProgramming.Parsing.Xaml
                         {
                             var n = String.Concat(Prefix, ':', LocalName);
 
-                            lock (Document.NameTable)
+                            if (name == null)
                             {
-                                if (name == null)
-                                {
-                                    name = Document.NameTable.Add(n);
-                                }
+                                name = n;
                             }
+
+                            /*lock (Document.NameTable)
+                            {
+                            }*/
                         }
                         else
                         {
@@ -62,19 +66,6 @@ namespace LibraProgramming.Parsing.Xaml
             get;
         }
 
-        internal int LocalNameHashCode
-        {
-            get
-            {
-                if (0 == localNameHash)
-                {
-                    localNameHash = LocalName.GetHashCode();
-                }
-
-                return localNameHash;
-            }
-        }
-
         internal XamlDocument Document
         {
             get;
@@ -83,6 +74,7 @@ namespace LibraProgramming.Parsing.Xaml
         internal XamlName Next
         {
             get;
+            set;
         }
 
         internal XamlName(string prefix, string localName, string ns, int hashCode, XamlDocument document, XamlName next)
@@ -143,7 +135,38 @@ namespace LibraProgramming.Parsing.Xaml
             */
         }
 
-        public int 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="name"></param>
+        /// <returns></returns>
+        public static int GetHashCode(string name)
+        {
+            var hashCode = 0;
+
+            if (null == name)
+            {
+                return hashCode;
+            }
+
+            for (var index = name.Length - 1; index >= 0; index--)
+            {
+                var ch = name[index];
+
+                if (':' == ch)
+                {
+                    break;
+                }
+
+                hashCode += (hashCode << 7) ^ ch;
+            }
+
+            hashCode -= hashCode >> 17;
+            hashCode -= hashCode >> 11;
+            hashCode -= hashCode >> 5;
+
+            return hashCode;
+        }
 
         public static bool operator ==(XamlName left, XamlName right)
         {

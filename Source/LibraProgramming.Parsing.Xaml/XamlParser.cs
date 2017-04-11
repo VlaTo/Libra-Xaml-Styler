@@ -47,6 +47,7 @@ namespace LibraProgramming.Parsing.Xaml
         private async Task ParseInternalAsync(XamlDocument document, Stack<XamlNode> nodes)
         {
             var state = ParserState.Unknown;
+            string name = null;
             var nameBuilder = new XamlNameBuilder();
             var valueBuilder = new XamlValueBuilder();
             XamlElement element = null;
@@ -167,7 +168,7 @@ namespace LibraProgramming.Parsing.Xaml
                     {
                         state = await ParseOpeningTagTrailingAsync(text =>
                         {
-                            nameBuilder.Name = text;
+                            name = BeginName(name, text);
                         });
                         break;
                     }
@@ -242,7 +243,8 @@ namespace LibraProgramming.Parsing.Xaml
 
                     case ParserState.OpeningTagAttributeQuotedValueEnd:
                     {
-                            element.Attributes.Add();
+                            var attribute=document.CreateAttribute()
+                            element.Attributes.Append();
                         state = ParserState.OpeningTagAttributeValueEnd;
                         break;
                     }
@@ -659,6 +661,16 @@ namespace LibraProgramming.Parsing.Xaml
             nodes.Pop();
 
             return ParserState.Begin;
+        }
+
+        private static string BeginName(string name, string str)
+        {
+            if (false == String.IsNullOrEmpty(name))
+            {
+                throw new Exception();
+            }
+
+            return str;
         }
 
 /*

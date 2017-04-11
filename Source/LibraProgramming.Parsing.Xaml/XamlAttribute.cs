@@ -33,6 +33,11 @@
         }
 */
 
+        internal int LocalNameHash
+        {
+            get;
+        }
+
         public override string Value
         {
             get

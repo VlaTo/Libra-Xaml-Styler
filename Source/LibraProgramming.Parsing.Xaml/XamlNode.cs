@@ -168,7 +168,7 @@ namespace LibraProgramming.Parsing.Xaml
 
         internal XamlNode(XamlNodeType nodeType)
         {
-            Attributes = new XamlAttributesCollection();
+            Attributes = new XamlAttributesCollection(this);
             NodeType = nodeType;
         }
 
@@ -286,6 +286,22 @@ namespace LibraProgramming.Parsing.Xaml
 
                 RemoveChild(child);
                 child = subling;
+            }
+        }
+
+        internal static void SplitName(string name, out string prefix, out string localName)
+        {
+            var position = name.IndexOf(':');
+
+            if (0 <= position || name.Length - 1 == position)
+            {
+                prefix = String.Empty;
+                localName = name;
+            }
+            else
+            {
+                prefix = name.Substring(0, position);
+                localName = name.Substring(position + 1);
             }
         }
 

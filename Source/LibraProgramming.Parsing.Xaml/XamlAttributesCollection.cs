@@ -34,7 +34,42 @@ namespace LibraProgramming.Parsing.Xaml
         {
             get
             {
-                
+                var hash = XamlName.GetHashCode(name);
+
+                for (var index = 0; index < attributes.Count; index++)
+                {
+                    var attribute = (XamlAttribute) attributes[index];
+
+                    if (hash == attribute.LocalNameHash &&
+                        name.Equals(attribute.LocalName, StringComparison.Ordinal))
+                    {
+                        return attribute;
+                    }
+                }
+
+                return null;
+            }
+        }
+
+        public XamlAttribute this[string name, string ns]
+        {
+            get
+            {
+                var hash = XamlName.GetHashCode(name);
+
+                for (var index = 0; index < attributes.Count; index++)
+                {
+                    var attribute = (XamlAttribute) attributes[index];
+
+                    if (hash == attribute.LocalNameHash &&
+                        name.Equals(attribute.LocalName, StringComparison.Ordinal) &&
+                        ns.Equals(attribute.NamespaceURI, StringComparison.Ordinal))
+                    {
+                        return attribute;
+                    }
+                }
+
+                return null;
             }
         }
 
@@ -49,9 +84,50 @@ namespace LibraProgramming.Parsing.Xaml
             return attributes.GetEnumerator();
         }
 
-        public XamlNode AddNode(XamlNode node)
+        public XamlNode Append(XamlAttribute attribute)
         {
-            ((XamlAttribute)node).ParentNode
+            var doc = attribute.OwnerDocument;
+
+            if (null != doc && doc != owner.OwnerDocument)
+            {
+                throw new Exception();
+            }
+
+            if (attribute.OwnerDocument != null)
+            {
+                DetachAttribute(attribute);
+            }
+
+            return attribute;
+        }
+
+        public XamlAttribute Remove(XamlAttribute attribute)
+        {
+            for (var index = 0; index < attributes.Count;)
+            {
+                if (attributes[index] == attribute)
+                {
+                    return RemoveAt(index);
+                }
+            }
+
+            return null;
+        }
+
+        public XamlAttribute RemoveAt(int index)
+        {
+            var attribute = (XamlAttribute) attributes[index];
+
+            attributes.RemoveAt(index);
+            attribute.SetParent(null);
+
+            return attribute;
+        }
+
+        internal static void DetachAttribute(XamlAttribute attribute)
+        {
+            var parent = attribute.ParentNode;
+            parent.Attributes.Remove(attribute);
         }
 
         private int FindIndex(string name)
