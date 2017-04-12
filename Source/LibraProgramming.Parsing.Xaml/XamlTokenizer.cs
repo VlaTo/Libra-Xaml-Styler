@@ -40,7 +40,6 @@ namespace LibraProgramming.Parsing.Xaml
             {
                 switch (state)
                 {
-
                     case TokenizerState.Unknown:
                     {
                         var flag = await AdvancePosition();
@@ -51,7 +50,7 @@ namespace LibraProgramming.Parsing.Xaml
                             break;
                         }
 
-                        state = TokenizerState.Failed;
+                        state = TokenizerState.EndOfDocument;
 
                         break;
                     }
@@ -121,39 +120,6 @@ namespace LibraProgramming.Parsing.Xaml
             return 0 <= Array.IndexOf(terminals, ch);
         }
 
-/*
-        private static XamlTerminal GetTermFromChar(char ch)
-        {
-            char[] terminals =
-            {
-                '<', ':', '.', '=', '\"','\'', '/', '>', ' ', '\t', '\r', '\n'
-            };
-            XamlTerminal[] values =
-            {
-                XamlTerminal.OpenAngleBracket,
-                XamlTerminal.Colon,
-                XamlTerminal.Dot,
-                XamlTerminal.Equal,
-                XamlTerminal.DoubleQuote,
-                XamlTerminal.SingleQuote,
-                XamlTerminal.Slash,
-                XamlTerminal.CloseAngleBracket,
-                XamlTerminal.Whitespace, 
-                XamlTerminal.Whitespace, 
-                XamlTerminal.Whitespace, 
-                XamlTerminal.Whitespace
-            };
-            var index = Array.IndexOf(terminals, ch);
-
-            if (-1 == index)
-            {
-                return XamlTerminal.Unknown;
-            }
-
-            return values[index];
-        }
-*/
-
         private void Dispose(bool dispose)
         {
             if (disposed)
@@ -177,27 +143,6 @@ namespace LibraProgramming.Parsing.Xaml
         internal int ReadCurrentChar()
         {
             return eof ? EndOfStream : buffer[position];
-
-            /*if (bufferPosition == bufferCount)
-            {
-                var count = await reader.ReadBlockAsync(buffer, 0, buffer.Length);
-
-                if (0 == count)
-                {
-                    eof = true;
-                    return EndOfStream;
-                }
-
-                bufferCount = count;
-                bufferPosition = 0;
-            }
-
-            var position = bufferPosition;
-
-            if (advance)
-            {
-                bufferPosition++;
-            }*/
         }
 
         private async Task<bool> AdvancePosition()

@@ -119,20 +119,14 @@ namespace LibraProgramming.Parsing.Xaml
                    && AreSame(NamespaceURI, other.NamespaceURI);
         }
 
+        public bool Match(string test)
+        {
+            return true;
+        }
+
         public override int GetHashCode()
         {
             return HashCode;
-/*
-                        unchecked
-                        {
-                            var hashCode = NamespaceURI?.GetHashCode() ?? 0;
-            
-                            hashCode = (hashCode * 0x18D) ^ (Prefix?.GetHashCode() ?? 0);
-                            hashCode = (hashCode * 0x18D) ^ (Name?.GetHashCode() ?? 0);
-            
-                            return hashCode;
-                        }
-            */
         }
 
         /// <summary>

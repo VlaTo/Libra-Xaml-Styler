@@ -25,7 +25,7 @@ namespace LibraProgramming.Parsing.Xaml.Core
             var comparer = StringComparer.Ordinal;
             var temp = node;
 
-            while (null != temp)
+            /*while (null != temp)
             {
                 var attribute = temp.Attributes
                     .FirstOrDefault(
@@ -38,7 +38,7 @@ namespace LibraProgramming.Parsing.Xaml.Core
                 }
 
                 temp = temp.ParentNode;
-            }
+            }*/
 
             return String.Empty;
         }

@@ -26,7 +26,12 @@ namespace LibraProgramming.Parsing.Xaml
         /// <summary>
         /// 
         /// </summary>
-        Document
+        Document,
+
+        /// <summary>
+        /// 
+        /// </summary>
+        Root
     }
 
     /// <summary>
@@ -293,7 +298,7 @@ namespace LibraProgramming.Parsing.Xaml
         {
             var position = name.IndexOf(':');
 
-            if (0 <= position || name.Length - 1 == position)
+            if (-1 == position || 0 == position || name.Length - 1 == position)
             {
                 prefix = String.Empty;
                 localName = name;

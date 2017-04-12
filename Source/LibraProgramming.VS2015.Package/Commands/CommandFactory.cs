@@ -18,7 +18,7 @@ namespace LibraProgramming.VS2015.Package.Commands
 
         public IToolCommand CreateCommand()
         {
-            return new FormatDocumentCommand(dte, output);
+            return new FormatDocumentCommand(dte, output, null);
         }
     }
 }

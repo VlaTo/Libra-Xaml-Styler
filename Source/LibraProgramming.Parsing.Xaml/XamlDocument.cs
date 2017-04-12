@@ -66,6 +66,36 @@ namespace LibraProgramming.Parsing.Xaml
         /// <summary>
         /// 
         /// </summary>
+        /// <param name="name"></param>
+        /// <param name="inlined"></param>
+        /// <returns></returns>
+        public XamlElement CreateElement(string name, bool inlined = false)
+        {
+            string prefix;
+            string localName;
+
+            SplitName(name, out prefix, out localName);
+
+            return CreateElement(prefix, localName, String.Empty, inlined);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="prefix"></param>
+        /// <param name="localName"></param>
+        /// <param name="ns"></param>
+        /// <param name="inlined"></param>
+        /// <returns></returns>
+        public XamlElement CreateElement(string prefix, string localName, string ns, bool inlined = false)
+        {
+            var name = CreateElementName(prefix, localName, ns);
+            return new XamlElement(this, name, inlined);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
         /// <param name="text"></param>
         /// <returns></returns>
         public static Task<XamlDocument> ParseAsync(string text)
@@ -105,6 +135,16 @@ namespace LibraProgramming.Parsing.Xaml
         }
 
         private XamlName CreateAttributeName(string prefix, string localName, string ns)
+        {
+            return CreateName(prefix, localName, ns);
+        }
+
+        private XamlName CreateElementName(string prefix, string localName, string ns)
+        {
+            return CreateName(prefix, localName, ns);
+        }
+
+        private XamlName CreateName(string prefix, string localName, string ns)
         {
             return NameTable.AddName(prefix, localName, ns);
         }

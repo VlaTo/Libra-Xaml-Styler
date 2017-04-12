@@ -32,7 +32,7 @@ namespace LibraProgramming.Parsing.Xaml.Visitors
 
         protected virtual void VisitElement(XamlElement element)
         {
-            foreach (var attribute in element.Attributes)
+            foreach (XamlAttribute attribute in element.Attributes)
             {
                 VisitAttribute(attribute);
             }

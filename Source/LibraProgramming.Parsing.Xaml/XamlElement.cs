@@ -15,6 +15,14 @@ namespace LibraProgramming.Parsing.Xaml
 
         public override string LocalName => name.LocalName;
 
+        public bool IsInlined
+        {
+            get
+            {
+                return this == LastNode;
+            }
+        }
+
         public XamlElement this[int index]
         {
             get

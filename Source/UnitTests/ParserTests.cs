@@ -16,6 +16,8 @@ namespace UnitTests
             var document = await XamlDocument.ParseAsync(test);
 
             Assert.IsNotNull(document);
+            Assert.IsNotNull(document.Root);
+            Assert.IsFalse(document.Root.HasChildNodes);
         }
 
         [TestMethod]
@@ -26,36 +28,72 @@ namespace UnitTests
             var document = await XamlDocument.ParseAsync(test);
 
             Assert.IsNotNull(document);
+            Assert.IsNotNull(document.Root);
+            Assert.IsFalse(document.Root.HasChildNodes);
         }
 
         [TestMethod]
         [TestCategory("Empty")]
-        public async Task TestMethod2()
+        public async Task SimpleInlinedPrefixedTag()
         {
-            const string test = " <Property>";
+            const string prefix = "app";
+            const string name = "Application.Property.Attribute";
+            const string test = "<" + prefix + ":" + name + "/>";
             var document = await XamlDocument.ParseAsync(test);
 
             Assert.IsNotNull(document);
+            Assert.IsNotNull(document.Root);
+            Assert.IsTrue(document.Root.HasChildNodes);
+            Assert.AreEqual(1, document.Root.ChildNodes.Count);
+
+            var node = document.Root.FirstChild;
+
+            Assert.AreEqual(prefix, node.Prefix);
+            Assert.AreEqual(name, node.LocalName);
         }
 
         [TestMethod]
         [TestCategory("Empty")]
-        public async Task TestMethod3()
+        public async Task SimpleInlinedNonPrefixedTag()
         {
-            const string test = "<app:Application.Property.Attribute> </app:Application.Property.Attribute>";
+            const string name = "Application.Property.Attribute";
+            const string test = "<" + name + "/>";
             var document = await XamlDocument.ParseAsync(test);
 
             Assert.IsNotNull(document);
+            Assert.IsNotNull(document.Root);
+            Assert.IsTrue(document.Root.HasChildNodes);
+            Assert.AreEqual(1, document.Root.ChildNodes.Count);
+
+            var node = document.Root.FirstChild;
+
+            Assert.AreEqual(String.Empty, node.Prefix);
+            Assert.AreEqual(name, node.LocalName);
         }
 
         [TestMethod]
         [TestCategory("Empty")]
-        public async Task TestMethod4()
+        public async Task TestMethod5()
         {
-            const string test = "<app:Application.Property.Attribute test=\"test string with 'single quoted' text\"> </app:Application.Property.Attribute>";
+            const string attribute = "Attribute";
+            const string value = "Lorem Ipsum";
+            const string test = "<p " + attribute + "=\"" + value + "\"/>";
             var document = await XamlDocument.ParseAsync(test);
 
             Assert.IsNotNull(document);
+            Assert.IsNotNull(document.Root);
+            Assert.IsTrue(document.Root.HasChildNodes);
+            Assert.AreEqual(1, document.Root.ChildNodes.Count);
+            Assert.IsInstanceOfType(document.Root.FirstChild, typeof(XamlElement));
+
+            var element = (XamlElement) document.Root.FirstChild;
+
+            Assert.AreEqual(1, element.Attributes.Count);
+
+            var attr = element.Attributes[attribute];
+
+            Assert.IsNotNull(attr);
+            Assert.AreEqual(attribute, attr.LocalName);
         }
     }
 }

@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Security.AccessControl;
 using System.Threading.Tasks;
 using LibraProgramming.Parsing.Xaml.Tokens;
 
@@ -48,7 +46,6 @@ namespace LibraProgramming.Parsing.Xaml
         {
             var state = ParserState.Unknown;
             string name = null;
-            var nameBuilder = new XamlNameBuilder();
             var valueBuilder = new XamlValueBuilder();
             XamlElement element = null;
 
@@ -70,10 +67,11 @@ namespace LibraProgramming.Parsing.Xaml
 
                     case ParserState.OpenBracket:
                     {
+                        var temp = name;
+
                         state = await ParseOpenBracketAsync(text =>
                         {
-                            nameBuilder.Clear();
-                            nameBuilder.Name = text;
+                            name = BeginName(temp, text);
                         });
                         break;
                     }
@@ -82,20 +80,20 @@ namespace LibraProgramming.Parsing.Xaml
                     {
                         state = await ParseTagOpenAsync(() =>
                         {
-                            var text = nameBuilder.Name;
-
-                            nameBuilder.Clear();
-                            nameBuilder.Prefix = text;
+                            // nothing to do here
                         });
                         break;
                     }
 
                     case ParserState.OpeningTagNamespaceColon:
                     {
+                        var temp = name;
+
                         state = await ParseOpeningTagNamespaceColonAsync(text =>
                         {
-                            nameBuilder.Name = text;
+                            name = SetNamespaceSeparator(temp) + AppendName(null, text);
                         });
+
                         break;
                     }
 
@@ -107,16 +105,25 @@ namespace LibraProgramming.Parsing.Xaml
 
                     case ParserState.OpeningTagNameDot:
                     {
-                        state = await ParseOpeningTagNameDotAsync(nameBuilder.AccumulateName);
+                        var temp = name;
+
+                        state = await ParseOpeningTagNameDotAsync(text =>
+                        {
+                            name = AppendName(temp, text);
+                        });
+
                         break;
                     }
 
                     case ParserState.OpeningTagNameTrailing:
                     {
+                        var temp = name;
+
                         state = await ParseOpeningTagNameTrailingAsync(() =>
                         {
-                            element = new XamlElement(document, nameBuilder.ToXamlName());
+                            element = document.CreateElement(temp);
                         });
+
                         break;
                     }
 
@@ -141,8 +148,9 @@ namespace LibraProgramming.Parsing.Xaml
 
                     case ParserState.OpeningTagInline:
                     {
-                        element = new XamlElement(document, nameBuilder.ToXamlName(), true);
+                        element = document.CreateElement(name, true);
                         state = ParserState.OpeningTagClosed;
+                        name = null;
 
                         break;
                     }
@@ -166,10 +174,13 @@ namespace LibraProgramming.Parsing.Xaml
 
                     case ParserState.OpeningTagTrailing:
                     {
+                        var temp = name;
+                           
                         state = await ParseOpeningTagTrailingAsync(text =>
                         {
-                            name = BeginName(name, text);
+                            name = BeginName(temp, text);
                         });
+
                         break;
                     }
 
@@ -243,9 +254,17 @@ namespace LibraProgramming.Parsing.Xaml
 
                     case ParserState.OpeningTagAttributeQuotedValueEnd:
                     {
-                            var attribute=document.CreateAttribute()
-                            element.Attributes.Append();
+                        var attribute = document.CreateAttribute(name);
+
+                        if (null == element)
+                        {
+                            throw new XamlParsingException();
+                        }
+
+                        name = null;
+                        element.Attributes.Append(attribute);
                         state = ParserState.OpeningTagAttributeValueEnd;
+
                         break;
                     }
 
@@ -370,7 +389,7 @@ namespace LibraProgramming.Parsing.Xaml
 
                     case ParserState.ClosingTagNameClose:
                     {
-                        state = ParseClosingTagNameClose(nodes, nameBuilder);
+                        state = ParseClosingTagNameClose(nodes, name);
                         break;
                     }
 
@@ -439,12 +458,16 @@ namespace LibraProgramming.Parsing.Xaml
             var parent = nodes.Peek();
 
             parent.AppendChild(element);
-            nodes.Push(element);
+
+            if (element.IsInlined == false)
+            {
+                nodes.Push(element);
+            }
 
             return ParserState.Begin;
         }
 
-        private async Task<ParserState> ParseOpeningTagNameTrailingAsync(Action createElementCallback)
+        private async Task<ParserState> ParseOpeningTagNameTrailingAsync(Action callback)
         {
             var token = await tokenizer.GetTokenAsync();
 
@@ -455,8 +478,7 @@ namespace LibraProgramming.Parsing.Xaml
 
             if (token.IsWhitespace())
             {
-                createElementCallback.Invoke();
-                //element = new XamlElement(document, nameBuilder.ToXamlName());
+                callback.Invoke();
                 return ParserState.OpeningTagTrailing;
             }
 
@@ -467,8 +489,7 @@ namespace LibraProgramming.Parsing.Xaml
 
             if (token.IsCloseBracket())
             {
-                createElementCallback.Invoke();
-                //element = new XamlElement(document, nameBuilder.ToXamlName());
+                callback.Invoke();
                 return ParserState.OpeningTagClose;
             }
 
@@ -562,7 +583,6 @@ namespace LibraProgramming.Parsing.Xaml
             if (token.IsColon())
             {
                 callback.Invoke();
-
                 return ParserState.OpeningTagNamespaceColon;
             }
 
@@ -591,8 +611,6 @@ namespace LibraProgramming.Parsing.Xaml
 
         private async Task<ParserState> ParseBeginAsync()
         {
-//            bool done;
-//            ParserState state;
             XamlToken token;
 
             while (true)
@@ -642,7 +660,7 @@ namespace LibraProgramming.Parsing.Xaml
             return ParserState.OpeningTagBegin;
         }
 
-        private static ParserState ParseClosingTagNameClose(Stack<XamlNode> nodes, XamlNameBuilder nameBuilder)
+        private static ParserState ParseClosingTagNameClose(Stack<XamlNode> nodes, string name)
         {
             var last = nodes.Peek() as XamlElement;
 
@@ -651,9 +669,7 @@ namespace LibraProgramming.Parsing.Xaml
                 throw new XamlParsingException();
             }
 
-            var name = nameBuilder.ToXamlName();
-
-            if (last.XamlName != name)
+            if (last.XamlName.Match(name))
             {
                 throw new XamlParsingException();
             }
@@ -671,6 +687,28 @@ namespace LibraProgramming.Parsing.Xaml
             }
 
             return str;
+        }
+
+        private static string SetNamespaceSeparator(string name)
+        {
+            var position = name.IndexOf(':');
+
+            if (-1 < position)
+            {
+                throw new Exception();
+            }
+
+            return String.Concat(name, ':');
+        }
+
+        private static string AppendName(string name, string part)
+        {
+            if (false == String.IsNullOrEmpty(name))
+            {
+                return String.Concat(name, '.', part);
+            }
+
+            return part;
         }
 
 /*

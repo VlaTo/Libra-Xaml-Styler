@@ -11,6 +11,7 @@ namespace UnitTests
     [TestClass]
     public class ReformatTests
     {
+/*
         [TestMethod]
         public void TestMethod1()
         {
@@ -19,7 +20,7 @@ namespace UnitTests
 
             document.AppendChild(
                 new XamlElement(document,
-                    XamlName.Create("uwp", "Node.Property.Path", "using: Test.Sample.Windows"))
+                    document.CreateAttribute() ("uwp", "Node.Property.Path", "using: Test.Sample.Windows"))
             );
 
             using (var writer = new StringWriter(text))
@@ -35,5 +36,6 @@ namespace UnitTests
 
             Debug.WriteLine(text.ToString());
         }
+*/
     }
 }
