@@ -93,7 +93,8 @@ namespace LibraProgramming.Parsing.Xaml
                 throw new Exception();
             }
 
-            if (attribute.OwnerDocument != null)
+//            if (attribute.OwnerDocument != null)
+            if (attribute.ParentNode != null)
             {
                 DetachAttribute(attribute);
             }
