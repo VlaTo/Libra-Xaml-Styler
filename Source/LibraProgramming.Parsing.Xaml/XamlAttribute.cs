@@ -40,10 +40,8 @@
 
         public override string Value
         {
-            get
-            {
-                return null;
-            }
+            get;
+            set;
         }
 
         public override XamlNodeList ChildNodes => null;

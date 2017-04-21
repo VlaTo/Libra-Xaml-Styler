@@ -285,7 +285,7 @@ namespace LibraProgramming.Parsing.Xaml
                     {
                         state = await ParseOpeningTagAttributeQuotedValueAsync(text =>
                         {
-                            
+                            value += text;
                         }).ConfigureAwait(false);
 
                         break;
@@ -293,15 +293,14 @@ namespace LibraProgramming.Parsing.Xaml
 
                     case ParserState.OpeningTagAttributeQuotedValueEnd:
                     {
-                        /*var attribute = document.CreateAttribute(text);
-
-                        if (null == element)
+                        if (null == attribute)
                         {
                             throw new XamlParsingException();
                         }
 
-                        text = null;
-                        element.Attributes.Append(attribute);*/
+                        attribute.Value = value;
+                        value = null;
+                        attribute = null;
                         state = ParserState.OpeningTagAttributeValueEnd;
 
                         break;
@@ -460,6 +459,10 @@ namespace LibraProgramming.Parsing.Xaml
             else if (token.IsWhitespace())
             {
                 callback.Invoke(new String(' ', 1));
+            }
+            else
+            {
+                return ParserState.Failed;
             }
 
             return ParserState.OpeningTagAttributeQuotedValue;
