@@ -8,41 +8,15 @@
 
         public override string NamespaceURI => XamlName.NamespaceURI;
 
-/*
-        public XamlNode Node
-        {
-            get
-            {
-                return node;
-            }
-            set
-            {
-                if (null != node)
-                {
-                    throw new Exception();
-                }
+        public override string LocalName => XamlName.LocalName;
 
-                if (null == value)
-                {
-                    throw new ArgumentNullException(nameof(node));
-                }
+        internal int LocalNameHash => XamlName.HashCode;
 
-                node = value;
-                node.Attributes.Add(this);
-            }
-        }
-*/
-
-        internal int LocalNameHash
-        {
-            get;
-        }
-
-        public override string Value
+        /*public override string Value
         {
             get;
             set;
-        }
+        }*/
 
         public override XamlNodeList ChildNodes => null;
 

@@ -94,10 +94,12 @@ namespace LibraProgramming.Parsing.Xaml
             }
 
 //            if (attribute.OwnerDocument != null)
-            if (attribute.ParentNode != null)
+            if (null != attribute.ParentNode)
             {
                 DetachAttribute(attribute);
             }
+
+            attributes.Add(attribute);
 
             return attribute;
         }
