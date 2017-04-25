@@ -21,6 +21,19 @@ namespace UnitTests
             Assert.IsFalse(document.Root.HasChildNodes);
         }
 
+        [DataRow("<:test/>", DisplayName = "Colon name")]
+        [DataRow("<t::test/>", DisplayName = "Prefix colon colon name")]
+        [DataRow("<t:t:est/>", DisplayName = "Multi-prefixed name")]
+        [DataRow("<.test/>", DisplayName = "Dot name")]
+        [DataRow("<t:.test/>", DisplayName = "Prefix colon dot name")]
+        [DataRow("<t.:test/>", DisplayName = "Prefix dot colon name")]
+        [DataRow("<t.t:test/>", DisplayName = "Prefix dot name colon name")]
+        [TestMethod]
+        public async Task BrokenInput(string input)
+        {
+            await Assert.ThrowsExceptionAsync<XamlParsingException>(() => XamlDocument.ParseAsync(input));
+        }
+
         /*[TestMethod, Ignore]
         public async Task ThreeWhitespacesInput()
         {

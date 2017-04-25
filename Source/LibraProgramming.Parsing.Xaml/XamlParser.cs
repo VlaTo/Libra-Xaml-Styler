@@ -184,10 +184,7 @@ namespace LibraProgramming.Parsing.Xaml
 
                     case ParserState.OpeningTagInline:
                     {
-//                        element = document.CreateElement(text, true);
                         state = ParserState.OpeningTagClosed;
-//                        text = null;
-
                         break;
                     }
 
@@ -212,18 +209,6 @@ namespace LibraProgramming.Parsing.Xaml
 
                         break;
                     }
-
-                    /*case ParserState.OpeningTagTrailing:
-                    {
-                        var temp = name;
-                           
-                        state = await ParseOpeningTagTrailingAsync(text =>
-                        {
-                            name = BeginName(temp, text);
-                        });
-
-                        break;
-                    }*/
 
                     case ParserState.OpeningTagAttributeCheck:
                     {
@@ -263,7 +248,19 @@ namespace LibraProgramming.Parsing.Xaml
 
                     case ParserState.OpeningTagAttributeNamespaceColon:
                     {
-                        throw new NotImplementedException();
+                        state = await ParseOpeningTagAttributeNamespaceColonAsync(text =>
+                        {
+                            if (null != prefix)
+                            {
+                                throw new XamlParsingException();
+                            }
+
+                            prefix = name;
+                            name = text;
+
+                        }).ConfigureAwait(false);
+
+                        break;
                     }
 
                     case ParserState.OpeningTagAttributeNameDot:
@@ -273,7 +270,40 @@ namespace LibraProgramming.Parsing.Xaml
 
                     case ParserState.OpeningTagAttributeNameTrailing:
                     {
-                        throw new NotImplementedException();
+                        state = await ParseOpeningTagAttributeNameTrailingAsync(() =>
+                        {
+                            if (null != attribute)
+                            {
+                                throw new XamlParsingException();
+                            }
+
+                            attribute = document.CreateAttribute(prefix, name, null);
+                            prefix = null;
+                            name = null;
+
+                        }).ConfigureAwait(false);
+
+                        break;
+                    }
+
+                    case ParserState.OpeningTagAttributeNameWhitespaceTrailing:
+                    {
+                        var token = await tokenizer.GetTokenAsync().ConfigureAwait(false);
+
+                        if (token.IsWhitespace())
+                        {
+                            state = ParserState.OpeningTagAttributeNameWhitespaceTrailing;
+                        }
+                        else if (token.IsEqual())
+                        {
+                            state = ParserState.OpeningTagAttributeNameEnd;
+                        }
+                        else
+                        {
+                            state = ParserState.Failed;
+                        }
+
+                        break;
                     }
 
                     case ParserState.OpeningTagAttributeQuotedValueBegin:
@@ -514,6 +544,46 @@ namespace LibraProgramming.Parsing.Xaml
             {
                 // staying in the same state
                 return ParserState.OpeningTagAttributeName;
+            }
+
+            return ParserState.Failed;
+        }
+
+        private async Task<ParserState> ParseOpeningTagAttributeNamespaceColonAsync(Action<string> callback)
+        {
+            var token = await tokenizer.GetTokenAsync().ConfigureAwait(false);
+
+            string text;
+
+            if (false == token.IsString(out text))
+            {
+                return ParserState.Failed;
+            }
+
+            callback.Invoke(text);
+
+            return ParserState.OpeningTagAttributeNameTrailing;
+        }
+
+        private async Task<ParserState> ParseOpeningTagAttributeNameTrailingAsync(Action callback)
+        {
+            var token = await tokenizer.GetTokenAsync().ConfigureAwait(false);
+
+            if (token.IsDot())
+            {
+                return ParserState.OpeningTagAttributeNameDot;
+            }
+
+            if (token.IsWhitespace())
+            {
+                callback.Invoke();
+                return ParserState.OpeningTagAttributeNameWhitespaceTrailing;
+            }
+
+            if (token.IsEqual())
+            {
+                callback.Invoke();
+                return ParserState.OpeningTagAttributeNameEnd;
             }
 
             return ParserState.Failed;
@@ -831,7 +901,8 @@ namespace LibraProgramming.Parsing.Xaml
             OpeningTagAttributeValueEnd,
             Done,
             OpeningTagAttributeCheck,
-            OpeningTagSlash
+            OpeningTagSlash,
+            OpeningTagAttributeNameWhitespaceTrailing
         }
     }
 }
