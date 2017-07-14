@@ -6,22 +6,35 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace UnitTests
 {
     [TestClass]
+    [TestCategory("ParserSimple")]
     public class ParserTests
     {
+        [DataRow("", DisplayName = "Empty String")]
+        [DataRow("  ", DisplayName = "Whitespaced String")]
         [TestMethod]
-        [TestCategory("Empty")]
-        public async Task EmptyInput()
+        public async Task EmptyInput(string empty)
         {
-            const string test = "";
-            var document = await XamlDocument.ParseAsync(test);
+            var document = await XamlDocument.ParseAsync(empty);
 
             Assert.IsNotNull(document);
             Assert.IsNotNull(document.Root);
             Assert.IsFalse(document.Root.HasChildNodes);
         }
 
+        [DataRow("<:test/>", DisplayName = "Colon name")]
+        [DataRow("<t::test/>", DisplayName = "Prefix colon colon name")]
+        [DataRow("<t:t:est/>", DisplayName = "Multi-prefixed name")]
+        [DataRow("<.test/>", DisplayName = "Dot name")]
+        [DataRow("<t:.test/>", DisplayName = "Prefix colon dot name")]
+        [DataRow("<t.:test/>", DisplayName = "Prefix dot colon name")]
+        [DataRow("<t.t:test/>", DisplayName = "Prefix dot name colon name")]
         [TestMethod]
-        [TestCategory("Empty")]
+        public async Task BrokenInput(string input)
+        {
+            await Assert.ThrowsExceptionAsync<XamlParsingException>(() => XamlDocument.ParseAsync(input));
+        }
+
+        /*[TestMethod, Ignore]
         public async Task ThreeWhitespacesInput()
         {
             var test = new String(' ', 3);
@@ -30,15 +43,15 @@ namespace UnitTests
             Assert.IsNotNull(document);
             Assert.IsNotNull(document.Root);
             Assert.IsFalse(document.Root.HasChildNodes);
-        }
+        }*/
 
+        [DataRow(null, "test", "test", DisplayName = "Stripped inlined tag")]
+        [DataRow("t", "test", "t:test", DisplayName = "Prefixed inlined tag")]
+        [DataRow("t", "test.element.node", "t:test.element.node", DisplayName = "Complex inlined tag")]
         [TestMethod]
-        [TestCategory("Empty")]
-        public async Task SimpleInlinedPrefixedTag()
+        public async Task SimpleInlinedPrefixedTag(string prefix, string name, string tag)
         {
-            const string prefix = "app";
-            const string name = "Application.Property.Attribute";
-            const string test = "<" + prefix + ":" + name + "/>";
+            var test = "<" + tag + "/>";
             var document = await XamlDocument.ParseAsync(test);
 
             Assert.IsNotNull(document);
@@ -48,12 +61,15 @@ namespace UnitTests
 
             var node = document.Root.FirstChild;
 
-            Assert.AreEqual(prefix, node.Prefix);
+            if (false == String.IsNullOrEmpty(prefix))
+            {
+                Assert.AreEqual(prefix, node.Prefix);
+            }
+
             Assert.AreEqual(name, node.LocalName);
         }
 
-        [TestMethod]
-        [TestCategory("Empty")]
+        /*[TestMethod, Ignore]
         public async Task SimpleInlinedNonPrefixedTag()
         {
             const string name = "Application.Property.Attribute";
@@ -69,15 +85,17 @@ namespace UnitTests
 
             Assert.AreEqual(String.Empty, node.Prefix);
             Assert.AreEqual(name, node.LocalName);
-        }
+        }*/
 
+        [DataRow("test", DisplayName = "Stripped name")]
+        [DataRow("t:test", DisplayName = "Prefixed name")]
+        [DataRow("test.name.attribute", DisplayName = "Prefixed name")]
+//        [DataRow("t:test.name.attribute", DisplayName = "Prefixed complex name")]
         [TestMethod]
-        [TestCategory("Empty")]
-        public async Task TestMethod5()
+        public async Task CheckAttributeNameParsingAsync(string attribute)
         {
-            const string attribute = "Attribute";
             const string value = "Lorem Ipsum";
-            const string test = "<p " + attribute + "=\"" + value + "\"/>";
+            var test = "<p " + attribute + "=\"" + value + "\"/>";
             var document = await XamlDocument.ParseAsync(test);
 
             Assert.IsNotNull(document);
@@ -90,10 +108,10 @@ namespace UnitTests
 
             Assert.AreEqual(1, element.Attributes.Count);
 
-            var attr = element.Attributes[attribute];
+            var attr = element.Attributes[0];
 
             Assert.IsNotNull(attr);
-            Assert.AreEqual(attribute, attr.LocalName);
+            Assert.AreEqual(attribute, attr.Name);
         }
     }
 }

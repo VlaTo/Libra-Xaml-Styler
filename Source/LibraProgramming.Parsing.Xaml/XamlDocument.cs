@@ -60,6 +60,11 @@ namespace LibraProgramming.Parsing.Xaml
         /// <returns></returns>
         public XamlAttribute CreateAttribute(string prefix, string localName, string ns)
         {
+            if (null == localName)
+            {
+                throw new ArgumentNullException(nameof(localName));
+            }
+
             return new XamlAttribute(this, CreateAttributeName(prefix, localName, ns));
         }
 

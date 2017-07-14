@@ -10,11 +10,11 @@ namespace LibraProgramming.Parsing.Xaml
         private readonly XamlName name;
         private XamlLinkedNode lastChild;
 
-        public override string Name => name.Name;
+        public override string Name => XamlName.Name;
 
-        public override string Prefix => name.Prefix;
+        public override string Prefix => XamlName.Prefix;
 
-        public override string LocalName => name.LocalName;
+        public override string LocalName => XamlName.LocalName;
 
         public bool IsEmpty
         {
@@ -112,12 +112,15 @@ namespace LibraProgramming.Parsing.Xaml
             }
         }*/
 
-        internal XamlName XamlName => name;
+        internal XamlName XamlName
+        {
+            get;
+        }
 
         public XamlElement(XamlDocument document, XamlName name, bool empty = false)
             : this(XamlNodeType.Element, document, empty)
         {
-            this.name = name;
+            XamlName = name;
         }
 
         protected XamlElement(XamlNodeType nodeType, XamlDocument document, bool empty = false)
