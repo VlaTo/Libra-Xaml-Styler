@@ -49,6 +49,7 @@ namespace LibraProgramming.Parsing.Xaml
             string prefix = null;
             string name = null;
             string value = null;
+            var inline = false;
             XamlElement element = null;
             XamlAttribute attribute = null;
 
@@ -147,7 +148,7 @@ namespace LibraProgramming.Parsing.Xaml
                         break;
                     }
 
-                    case ParserState.OpeningTagNameSlash:
+                    case ParserState.OpeningTagSlash:
                     {
                         var token = await tokenizer.GetTokenAsync();
 
@@ -157,7 +158,9 @@ namespace LibraProgramming.Parsing.Xaml
                             break;
                         }
 
-                        throw new XamlParsingException();
+                        state = ParserState.Failed;
+
+                        break;
                     }
 
                     case ParserState.OpeningTagClose:
@@ -168,9 +171,13 @@ namespace LibraProgramming.Parsing.Xaml
 
                     case ParserState.OpeningTagInline:
                     {
-//                        element = document.CreateElement(text, true);
+                        if (null == element)
+                        {
+                            throw new XamlParsingException();
+                        }
+
+                        element.IsEmpty = true;
                         state = ParserState.OpeningTagClosed;
-//                        text = null;
 
                         break;
                     }
@@ -182,12 +189,17 @@ namespace LibraProgramming.Parsing.Xaml
                             throw new XamlParsingException();
                         }
 
-                        state = ParseOpeningTagClosed(nodes, element);
+                        var parent = nodes.Peek();
 
-                        if (ParserState.Begin == state)
+                        parent.AppendChild(element);
+
+                        if (false == element.IsEmpty)
                         {
-                            element = null;
+                            nodes.Push(element);
                         }
+
+                        state = ParserState.Begin;
+                        element = null;
 
                         break;
                     }
@@ -308,28 +320,7 @@ namespace LibraProgramming.Parsing.Xaml
 
                     case ParserState.OpeningTagAttributeValueEnd:
                     {
-                        var token = await tokenizer.GetTokenAsync();
-
-                        if (token.IsWhitespace())
-                        {
-                            state = ParserState.OpeningTagTrailing;
-                            break;
-                        }
-
-                        if (token.IsSlash())
-                        {
-                            state = ParserState.OpeningTagNameSlash;
-                            break;
-                        }
-
-                        if (token.IsCloseBracket())
-                        {
-                            state = ParserState.OpeningTagClose;
-                            break;
-                        }
-
-                        state = ParserState.Failed;
-
+                        state = await ParseOpeningTagAttributeValueEndAsync().ConfigureAwait(false);
                         break;
                     }
 
@@ -441,6 +432,28 @@ namespace LibraProgramming.Parsing.Xaml
             }
         }
 
+        private async Task<ParserState> ParseOpeningTagAttributeValueEndAsync()
+        {
+            var token = await tokenizer.GetTokenAsync().ConfigureAwait(false);
+
+            if (token.IsWhitespace())
+            {
+                return ParserState.OpeningTagTrailing;
+            }
+
+            if (token.IsSlash())
+            {
+                return ParserState.OpeningTagSlash;
+            }
+
+            if (token.IsCloseBracket())
+            {
+                return ParserState.OpeningTagClose;
+            }
+
+            return ParserState.Failed;
+        }
+
         private async Task<ParserState> ParseOpeningTagAttributeQuotedValueAsync(Action<string> callback)
         {
             var token = await tokenizer.GetTokenAsync().ConfigureAwait(false);
@@ -550,20 +563,6 @@ namespace LibraProgramming.Parsing.Xaml
             }
 
             throw new XamlParsingException();
-        }
-
-        private static ParserState ParseOpeningTagClosed(Stack<XamlNode> nodes, XamlElement element)
-        {
-            var parent = nodes.Peek();
-
-            parent.AppendChild(element);
-
-            if (element.IsInlined == false)
-            {
-                nodes.Push(element);
-            }
-
-            return ParserState.Begin;
         }
 
         private async Task<ParserState> ParseOpeningTagNameTrailingAsync(Action callback)

@@ -8,6 +8,7 @@ namespace LibraProgramming.Parsing.Xaml
     public class XamlElement : XamlLinkedNode
     {
         private readonly XamlName name;
+        private XamlLinkedNode lastChild;
 
         public override string Name => name.Name;
 
@@ -15,11 +16,29 @@ namespace LibraProgramming.Parsing.Xaml
 
         public override string LocalName => name.LocalName;
 
-        public bool IsInlined
+        public bool IsEmpty
         {
             get
             {
-                return this == LastNode;
+                return this == lastChild;
+            }
+            set
+            {
+                if (value)
+                {
+                    if (this != lastChild)
+                    {
+                        RemoveAll();
+                        lastChild = this;
+                    }
+                }
+                else
+                {
+                    if (this == lastChild)
+                    {
+                        lastChild = null;
+                    }
+                }
             }
         }
 
@@ -40,8 +59,14 @@ namespace LibraProgramming.Parsing.Xaml
 
         internal override XamlLinkedNode LastNode
         {
-            get;
-            set;
+            get
+            {
+                return this == lastChild ? null : lastChild;
+            }
+            set
+            {
+                lastChild = value;
+            }
         }
 
         /*public XamlElement this[string n]
@@ -89,18 +114,18 @@ namespace LibraProgramming.Parsing.Xaml
 
         internal XamlName XamlName => name;
 
-        public XamlElement(XamlDocument document, XamlName name, bool inlined = false)
-            : this(XamlNodeType.Element, document, inlined)
+        public XamlElement(XamlDocument document, XamlName name, bool empty = false)
+            : this(XamlNodeType.Element, document, empty)
         {
             this.name = name;
         }
 
-        protected XamlElement(XamlNodeType nodeType, XamlDocument document, bool inlined = false)
+        protected XamlElement(XamlNodeType nodeType, XamlDocument document, bool empty = false)
             : base(nodeType, document, null)
         {
-            if (inlined)
+            if (empty)
             {
-                LastNode = this;
+                lastChild = this;
             }
         }
     }

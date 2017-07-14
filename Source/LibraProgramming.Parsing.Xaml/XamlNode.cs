@@ -117,7 +117,17 @@ namespace LibraProgramming.Parsing.Xaml
             get;
         }
 
-        public virtual XamlNode LastChild => LastNode;
+        public virtual XamlNode LastChild
+        {
+            get
+            {
+                return LastNode;
+            }
+            internal set
+            {
+                LastChild = value;
+            }
+        }
 
         public virtual XamlDocument OwnerDocument
         {

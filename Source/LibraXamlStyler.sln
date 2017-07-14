@@ -1,18 +1,18 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 14
-VisualStudioVersion = 14.0.23107.0
+# Visual Studio 15
+VisualStudioVersion = 15.0.26430.15
 MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{14B457EE-9F5B-477C-B262-FDE35A754629}"
+	ProjectSection(SolutionItems) = preProject
+		Signing\Key.snk = Signing\Key.snk
+	EndProjectSection
+EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LibraProgramming.Parsing.Xaml", "LibraProgramming.Parsing.Xaml\LibraProgramming.Parsing.Xaml.csproj", "{39508269-8435-4F49-AF9A-E684EAE56888}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UnitTests", "UnitTests\UnitTests.csproj", "{6D4AA76F-D260-4E8C-9801-F98EF2FF17D7}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LibraProgramming.VS2015.Package", "LibraProgramming.VS2015.Package\LibraProgramming.VS2015.Package.csproj", "{575B50EA-18AC-4CF6-8A47-4A744D03ABD5}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{14B457EE-9F5B-477C-B262-FDE35A754629}"
-	ProjectSection(SolutionItems) = preProject
-		Signing\Key.snk = Signing\Key.snk
-	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
