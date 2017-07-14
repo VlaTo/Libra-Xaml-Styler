@@ -87,9 +87,9 @@ namespace UnitTests
             Assert.AreEqual(name, node.LocalName);
         }*/
 
-//        [DataRow("test", DisplayName = "Stripped name")]
+        [DataRow("test", DisplayName = "Stripped name")]
         [DataRow("t:test", DisplayName = "Prefixed name")]
-//        [DataRow("test.name.attribute", DisplayName = "Prefixed name")]
+        [DataRow("test.name.attribute", DisplayName = "Prefixed name")]
 //        [DataRow("t:test.name.attribute", DisplayName = "Prefixed complex name")]
         [TestMethod]
         public async Task CheckAttributeNameParsingAsync(string attribute)
@@ -108,10 +108,10 @@ namespace UnitTests
 
             Assert.AreEqual(1, element.Attributes.Count);
 
-            var attr = element.Attributes[attribute];
+            var attr = element.Attributes[0];
 
             Assert.IsNotNull(attr);
-            Assert.AreEqual(attribute, attr.LocalName);
+            Assert.AreEqual(attribute, attr.Name);
         }
     }
 }
