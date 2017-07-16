@@ -90,7 +90,7 @@ namespace UnitTests
         [DataRow("test", DisplayName = "Stripped name")]
         [DataRow("t:test", DisplayName = "Prefixed name")]
         [DataRow("test.name.attribute", DisplayName = "Prefixed name")]
-//        [DataRow("t:test.name.attribute", DisplayName = "Prefixed complex name")]
+        [DataRow("t:test.name.attribute", DisplayName = "Prefixed complex name")]
         [TestMethod]
         public async Task CheckAttributeNameParsingAsync(string attribute)
         {

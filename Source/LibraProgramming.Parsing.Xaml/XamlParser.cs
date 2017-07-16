@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Text;
 using System.Threading.Tasks;
 using LibraProgramming.Parsing.Xaml.Tokens;
 
@@ -11,11 +9,20 @@ namespace LibraProgramming.Parsing.Xaml
     {
         private readonly XamlTokenizer tokenizer;
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="tokenizer"></param>
         public XamlParser(XamlTokenizer tokenizer)
         {
             this.tokenizer = tokenizer;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="document"></param>
+        /// <returns></returns>
         public async Task ParseAsync(XamlDocument document)
         {
             if (null == document)
@@ -36,10 +43,13 @@ namespace LibraProgramming.Parsing.Xaml
                     throw new XamlParsingException();
                 }
             }
+            catch (XamlParsingException)
+            {
+                throw;
+            }
             catch (Exception exception)
             {
-                Debugger.Break();
-                throw new XamlParsingException();
+                throw new XamlParsingException("", exception);
             }
         }
 
@@ -49,7 +59,6 @@ namespace LibraProgramming.Parsing.Xaml
             string prefix = null;
             string name = null;
             string value = null;
-            var inline = false;
             XamlElement element = null;
 
             while (ParserState.Done != state)
@@ -361,10 +370,9 @@ namespace LibraProgramming.Parsing.Xaml
 
                     case ParserState.ClosingTagBegin:
                     {
-                        string text;
                         var token = await tokenizer.GetTokenAsync();
 
-                        if (false == token.IsString(out text))
+                        if (false == token.IsString(out string text))
                         {
                             throw new XamlParsingException();
                         }
@@ -373,15 +381,10 @@ namespace LibraProgramming.Parsing.Xaml
 
                         if (token.IsColon())
                         {
-//                            prefix = text;
-//                            fullName = null;
                             state = ParserState.ClosingTagNamespaceColon;
 
                             break;
                         }
-
-//                        prefix = null;
-//                        fullName = text;
 
                         if (token.IsDot())
                         {
@@ -400,15 +403,13 @@ namespace LibraProgramming.Parsing.Xaml
 
                     case ParserState.ClosingTagNamespaceColon:
                     {
-                        string text;
                         var token = await tokenizer.GetTokenAsync();
 
-                        if (false == token.IsString(out text))
+                        if (false == token.IsString(out string text))
                         {
                             throw new XamlParsingException();
                         }
 
-//                        fullName = text;
                         token = await tokenizer.GetTokenAsync();
 
                         if (token.IsDot())
@@ -430,9 +431,7 @@ namespace LibraProgramming.Parsing.Xaml
                     {
                         var token = await tokenizer.GetTokenAsync();
 
-                        string text;
-
-                        if (false == token.IsString(out text))
+                        if (false == token.IsString(out string text))
                         {
                             throw new XamlParsingException();
                         }
@@ -498,9 +497,7 @@ namespace LibraProgramming.Parsing.Xaml
                 return ParserState.OpeningTagAttributeQuotedValueEnd;
             }
 
-            string text;
-
-            if (token.IsString(out text))
+            if (token.IsString(out string text))
             {
                 callback.Invoke(text);
             }
@@ -547,9 +544,7 @@ namespace LibraProgramming.Parsing.Xaml
         {
             var token = await tokenizer.GetTokenAsync().ConfigureAwait(false);
 
-            string text;
-
-            if (false == token.IsString(out text))
+            if (false == token.IsString(out string text))
             {
                 return ParserState.Failed;
             }
@@ -590,9 +585,7 @@ namespace LibraProgramming.Parsing.Xaml
                 return ParserState.OpeningTagAttributeCheck;
             }
 
-            string text;
-
-            if (token.IsString(out text))
+            if (token.IsString(out string text))
             {
                 callback.Invoke(text);
                 return ParserState.OpeningTagAttributeName;
@@ -615,40 +608,13 @@ namespace LibraProgramming.Parsing.Xaml
         {
             var token = await tokenizer.GetTokenAsync().ConfigureAwait(false);
 
-            string text;
-
-            if (token.IsString(out text))
+            if (token.IsString(out string text))
             {
                 callback.Invoke(text);
+                return ParserState.OpeningTagAttributeName;
             }
 
             return ParserState.Failed;
-        }
-
-        /*
-                private async Task<ParserState> ParseOpeningTagTrailingAsync(Action<string> callback)
-                {
-                    var token = await tokenizer.GetTokenAsync().ConfigureAwait(false);
-
-                    if (token.IsWhitespace())
-                    {
-                        return ParserState.OpeningTagTrailing;
-                    }
-
-                    string text;
-
-                    if (token.IsString(out text))
-                    {
-                        callback.Invoke(text);
-                        return ParserState.OpeningTagAttributeName;
-                    }
-
-                    if (token.IsSlash())
-                    {
-                        return ParserState.OpeningTagNameSlash;
-                    }
-
-            throw new XamlParsingException();
         }
 
         private async Task<ParserState> ParseOpeningTagNameTrailingAsync(Action callback)
@@ -685,9 +651,7 @@ namespace LibraProgramming.Parsing.Xaml
         {
             var token = await tokenizer.GetTokenAsync().ConfigureAwait(false);
 
-            string text;
-
-            if (false == token.IsString(out text))
+            if (false == token.IsString(out string text))
             {
                 return ParserState.Failed;
             }
@@ -701,9 +665,7 @@ namespace LibraProgramming.Parsing.Xaml
         {
             var token = await tokenizer.GetTokenAsync().ConfigureAwait(false);
 
-            string text;
-
-            if (false == token.IsString(out text))
+            if (false == token.IsString(out string text))
             {
                 return ParserState.Failed;
             }
@@ -839,9 +801,7 @@ namespace LibraProgramming.Parsing.Xaml
                 return ParserState.ClosingTagBegin;
             }
 
-            string text;
-
-            if (false == token.IsString(out text))
+            if (false == token.IsString(out string text))
             {
                 return ParserState.Failed;
             }

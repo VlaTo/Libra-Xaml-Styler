@@ -12,7 +12,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LibraProgramming.Parsing.Xa
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UnitTests", "UnitTests\UnitTests.csproj", "{6D4AA76F-D260-4E8C-9801-F98EF2FF17D7}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LibraProgramming.VS2015.Package", "LibraProgramming.VS2015.Package\LibraProgramming.VS2015.Package.csproj", "{575B50EA-18AC-4CF6-8A47-4A744D03ABD5}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LibraProgramming.VS2017.Package", "LibraProgramming.VS2017.Package\LibraProgramming.VS2017.Package.csproj", "{A85E8FDC-C105-4079-BC4E-F7AD3BD2762F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -28,10 +28,10 @@ Global
 		{6D4AA76F-D260-4E8C-9801-F98EF2FF17D7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6D4AA76F-D260-4E8C-9801-F98EF2FF17D7}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6D4AA76F-D260-4E8C-9801-F98EF2FF17D7}.Release|Any CPU.Build.0 = Release|Any CPU
-		{575B50EA-18AC-4CF6-8A47-4A744D03ABD5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{575B50EA-18AC-4CF6-8A47-4A744D03ABD5}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{575B50EA-18AC-4CF6-8A47-4A744D03ABD5}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{575B50EA-18AC-4CF6-8A47-4A744D03ABD5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A85E8FDC-C105-4079-BC4E-F7AD3BD2762F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A85E8FDC-C105-4079-BC4E-F7AD3BD2762F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A85E8FDC-C105-4079-BC4E-F7AD3BD2762F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A85E8FDC-C105-4079-BC4E-F7AD3BD2762F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
