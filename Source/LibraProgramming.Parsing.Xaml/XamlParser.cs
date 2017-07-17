@@ -40,16 +40,16 @@ namespace LibraProgramming.Parsing.Xaml
 
                 if (1 != nodes.Count)
                 {
-                    throw new XamlParsingException();
+                    throw new ParsingException();
                 }
             }
-            catch (XamlParsingException)
+            catch (ParsingException)
             {
                 throw;
             }
             catch (Exception exception)
             {
-                throw new XamlParsingException("", exception);
+                throw new ParsingException("", exception);
             }
         }
 
@@ -73,7 +73,12 @@ namespace LibraProgramming.Parsing.Xaml
 
                     case ParserState.Begin:
                     {
-                        state = await ParseBeginAsync().ConfigureAwait(false);
+                        state = await ParseBeginAsync(text =>
+                        {
+                            value = text;
+
+                        }).ConfigureAwait(false);
+
                         break;
                     }
 
@@ -83,7 +88,7 @@ namespace LibraProgramming.Parsing.Xaml
                         {
                             if (null != name)
                             {
-                                throw new XamlParsingException();
+                                throw new ParsingException();
                             }
 
                             name = text;
@@ -111,7 +116,7 @@ namespace LibraProgramming.Parsing.Xaml
                         {
                             if (null != prefix)
                             {
-                                throw new XamlParsingException();
+                                throw new ParsingException();
                             }
 
                             prefix = name;
@@ -141,7 +146,7 @@ namespace LibraProgramming.Parsing.Xaml
                         {
                             if (null == name)
                             {
-                                throw new XamlParsingException();
+                                throw new ParsingException();
                             }
 
                             name += ('.' + text);
@@ -195,7 +200,7 @@ namespace LibraProgramming.Parsing.Xaml
                     {
                         if (null == element)
                         {
-                            throw new XamlParsingException();
+                            throw new ParsingException();
                         }
 
                         element.IsEmpty = true;
@@ -208,10 +213,22 @@ namespace LibraProgramming.Parsing.Xaml
                     {
                         if (null == element)
                         {
-                            throw new XamlParsingException();
+                            throw new ParsingException();
                         }
 
                         var parent = nodes.Peek();
+
+                        if (null == parent)
+                        {
+                            state = ParserState.Failed;
+                            break;
+                        }
+
+                        if (null != parent.Value)
+                        {
+                            state = ParserState.Failed;
+                            break;
+                        }
 
                         parent.AppendChild(element);
 
@@ -265,7 +282,7 @@ namespace LibraProgramming.Parsing.Xaml
                         {
                             if (null != prefix)
                             {
-                                throw new XamlParsingException();
+                                throw new ParsingException();
                             }
 
                             prefix = name;
@@ -406,7 +423,7 @@ namespace LibraProgramming.Parsing.Xaml
 
                         if (false == token.IsString(out string text))
                         {
-                            throw new XamlParsingException();
+                            throw new ParsingException();
                         }
 
                         token = await tokenizer.GetTokenAsync();
@@ -429,16 +446,44 @@ namespace LibraProgramming.Parsing.Xaml
 
                     case ParserState.ClosingTagNameClose:
                     {
-                        var temp = document.CreateElementName(prefix, name, null);
+                        var tagname = document.CreateElementName(prefix, name, null);
 
-                        state = ParseClosingTagNameClose(nodes, temp);
+                        state = ParseClosingTagNameClose(nodes, tagname);
+
+                        break;
+                    }
+
+                    case ParserState.TagInnerValue:
+                    {
+                        state = await ParseTagInnerValueAsync(text =>
+                        {
+                            value += text;
+
+                        }).ConfigureAwait(false);
+
+                        break;
+                    }
+
+                    case ParserState.TagInnerValueEnd:
+                    {
+                        var node = nodes.Peek();
+
+                        if (null == node)
+                        {
+                            state = ParserState.Failed;
+                            break;
+                        }
+
+                        node.Value = value;
+                        state = ParserState.OpenBracket;
+                        value = null;
 
                         break;
                     }
 
                     default:
                     {
-                        throw new XamlParsingException();
+                        throw new ParsingException();
                     }
                 }
             }
@@ -478,17 +523,26 @@ namespace LibraProgramming.Parsing.Xaml
             if (token.IsString(out string text))
             {
                 callback.Invoke(text);
+                return ParserState.OpeningTagAttributeQuotedValue;
             }
-            else if (token.IsWhitespace())
+
+            if (token.IsWhitespace())
             {
                 callback.Invoke(new String(' ', 1));
+                return ParserState.OpeningTagAttributeQuotedValue;
             }
             else
             {
-                return ParserState.Failed;
+                var ch = '\0';
+
+                if (token.IsTerminal(ref ch))
+                {
+                    callback.Invoke(new string(ch, 1));
+                    return ParserState.OpeningTagAttributeQuotedValue;
+                }
             }
 
-            return ParserState.OpeningTagAttributeQuotedValue;
+            return ParserState.Failed;
         }
 
         private async Task<ParserState> ParseOpeningTagAttributeNameAsync()
@@ -743,7 +797,7 @@ namespace LibraProgramming.Parsing.Xaml
             return ParserState.Failed;
         }
 
-        private async Task<ParserState> ParseBeginAsync()
+        private async Task<ParserState> ParseBeginAsync(Action<string> callback)
         {
             XamlToken token;
 
@@ -758,6 +812,12 @@ namespace LibraProgramming.Parsing.Xaml
                 }
 
                 break;
+            }
+
+            if (token.IsString(out string text))
+            {
+                callback.Invoke(text);
+                return ParserState.TagInnerValue;
             }
 
             if (token.IsEnd())
@@ -828,13 +888,37 @@ namespace LibraProgramming.Parsing.Xaml
             return ParserState.ClosingTagNameTrailing;
         }
 
+        private async Task<ParserState> ParseTagInnerValueAsync(Action<string> callback)
+        {
+            var token = await tokenizer.GetTokenAsync().ConfigureAwait(false);
+
+            if (token.IsOpenBracket())
+            {
+                return ParserState.TagInnerValueEnd;
+            }
+
+            if (token.IsString(out string text))
+            {
+                callback.Invoke(text);
+                return ParserState.TagInnerValue;
+            }
+
+            if (token.IsWhitespace())
+            {
+                callback.Invoke(((XamlTerminalToken) token).Term.ToString());
+                return ParserState.TagInnerValue;
+            }
+
+            return ParserState.Failed;
+        }
+
         private static ParserState ParseClosingTagNameClose(Stack<XamlNode> nodes, XamlName name)
         {
             var last = nodes.Peek() as XamlElement;
 
             if (null == last)
             {
-                throw new XamlParsingException();
+                throw new ParsingException();
             }
 
             if (false == last.XamlName.Equals(name))
@@ -887,6 +971,10 @@ namespace LibraProgramming.Parsing.Xaml
             ClosingTagNameDot,
             ClosingTagNameClose,
             ClosingTagNameTrailing,
+            //
+            TagInnerValue,
+            TagInnerValueEnd,
+            //
             Done
         }
     }

@@ -6,32 +6,6 @@ using LibraProgramming.Parsing.Xaml.Tokens;
 
 namespace LibraProgramming.Parsing.Xaml
 {
-    internal sealed class TextPosition
-    {
-        public static readonly TextPosition Empty;
-
-        public int Line
-        {
-            get;
-        }
-
-        public int Position
-        {
-            get;
-        }
-
-        internal TextPosition(int line, int position)
-        {
-            Line = line;
-            Position = position;
-        }
-
-        static TextPosition()
-        {
-            Empty = new TextPosition(0, 0);
-        }
-    }
-
     internal sealed class XamlTokenizer : IDisposable
     {
         private const int EndOfStream = -1;
@@ -75,11 +49,13 @@ namespace LibraProgramming.Parsing.Xaml
                 {
                     case TokenizerState.Unknown:
                     {
-                        var flag = await AdvancePosition();
+                        var success = await AdvancePosition();
 
-                        if (flag)
+                        if (success)
                         {
+                            TextPosition = TextPosition.Begin();
                             state = TokenizerState.Reading;
+
                             break;
                         }
 
@@ -112,14 +88,14 @@ namespace LibraProgramming.Parsing.Xaml
                                 return XamlToken.String(text.ToString());
                             }
 
-                            await AdvancePosition();
+                            await NextPosition();
 
                             return XamlToken.Terminal(current);
                         }
 
                         text.Append(current);
 
-                        await AdvancePosition();
+                        await NextPosition();
 
                         break;
                     }
@@ -130,6 +106,27 @@ namespace LibraProgramming.Parsing.Xaml
                     }
                 }
             }
+        }
+
+        private async Task<bool> NextPosition()
+        {
+            if (false == await AdvancePosition())
+            {
+                return false;
+            }
+
+            var ch = ReadCurrentChar();
+
+            if ('\n' == ch)
+            {
+                TextPosition = TextPosition.NewLine();
+            }
+            else if ('\r' != ch)
+            {
+                TextPosition = TextPosition.NextPosition();
+            }
+
+            return true;
         }
 
         private static bool IsTerm(char ch)
@@ -147,7 +144,28 @@ namespace LibraProgramming.Parsing.Xaml
                 XamlTerminals.Whitespace,
                 '\t',
                 '\r',
-                '\n'
+                '\n',
+                '!',
+                '@',
+                '#',
+                '$',
+                '%',
+                '&',
+                '*',
+                '(',
+                ')',
+                '-',
+                '_',
+                '=',
+                '+',
+                '[',
+                ']',
+                '{',
+                '}',
+                ':',
+                ';',
+                '\\',
+                '/'
             };
 
             return 0 <= Array.IndexOf(terminals, ch);

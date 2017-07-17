@@ -45,7 +45,7 @@ namespace LibraProgramming.Parsing.Xaml.Visitors
 
         protected virtual void VisitUnknown(XamlNode node)
         {
-            throw new XamlParsingException();
+            throw new ParsingException();
         }
 
         private void ProcessChild(XamlNode node)

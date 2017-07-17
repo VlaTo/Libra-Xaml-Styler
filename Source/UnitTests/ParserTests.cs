@@ -1,4 +1,7 @@
 ﻿using System;
+using System.Diagnostics;
+using System.IO;
+using System.Reflection;
 using System.Threading.Tasks;
 using LibraProgramming.Parsing.Xaml;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -31,7 +34,7 @@ namespace UnitTests
         [TestMethod]
         public async Task BrokenInput(string input)
         {
-            await Assert.ThrowsExceptionAsync<XamlParsingException>(() => XamlDocument.ParseAsync(input));
+            await Assert.ThrowsExceptionAsync<XamlParserException>(() => XamlDocument.ParseAsync(input));
         }
 
         [DataRow(null, "test", "test", DisplayName = "Stripped inlined tag")]
@@ -100,15 +103,61 @@ namespace UnitTests
             Assert.AreEqual(1, document.Root.ChildNodes.Count);
             Assert.IsInstanceOfType(document.Root.FirstChild, typeof(XamlElement));
 
-            var element = (XamlElement)document.Root.FirstChild;
+            var element = (XamlElement) document.Root.FirstChild;
 
             Assert.AreEqual(1, element.ChildNodes.Count);
         }
 
+        [DataRow("< Page />", DisplayName = "Test1")]
+        [DataRow("<-Page />", DisplayName = "Test2")]
+        [DataRow("<!Page />", DisplayName = "Test3")]
+        [DataRow("<@Page />", DisplayName = "Test4")]
+        [DataRow("<#Page />", DisplayName = "Test5")]
+        [DataRow("<$Page />", DisplayName = "Test6")]
         [TestMethod]
-        public async Task InvalidTagName()
+        public async Task InvalidTagName(string text)
         {
-            await Assert.ThrowsExceptionAsync<XamlParsingException>(() => XamlDocument.ParseAsync("< Page />"));
+            await Assert.ThrowsExceptionAsync<XamlParserException>(() => XamlDocument.ParseAsync(text));
+        }
+
+        [TestMethod]
+        public async Task ValidTagInnerValue()
+        {
+            const string content = "Inner Content";
+            var test = "<Page>" + content + "</Page>";
+
+            var document = await XamlDocument.ParseAsync(test);
+
+            Assert.IsNotNull(document);
+            Assert.IsNotNull(document.Root);
+            Assert.IsTrue(document.Root.HasChildNodes);
+            Assert.AreEqual(1, document.Root.ChildNodes.Count);
+
+            var element = document.Root.ChildNodes[0];
+
+            Assert.AreEqual(content, element.Value);
+        }
+
+        [TestMethod]
+        public async Task Test1()
+        {
+            var assembly = Assembly.GetExecutingAssembly();
+            var stream = assembly.GetManifestResourceStream("UnitTests.Samples.Test1.Sample.xaml");
+
+            try
+            {
+                using (var reader = new StreamReader(stream))
+                {
+                    var document = await XamlDocument.ParseAsync(reader);
+
+                    Assert.IsNotNull(document);
+                    Assert.IsNotNull(document.Root);
+                }
+            }
+            catch (XamlParserException exception)
+            {
+                throw exception;
+            }
         }
     }
 }

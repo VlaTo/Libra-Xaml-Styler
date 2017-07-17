@@ -132,8 +132,19 @@ namespace LibraProgramming.Parsing.Xaml
 
             using (var tokenizer = new XamlTokenizer(reader, 1024))
             {
-                var parser = new XamlParser(tokenizer);
-                await parser.ParseAsync(document);
+                try
+                {
+                    var parser = new XamlParser(tokenizer);
+                    await parser.ParseAsync(document);
+                }
+                catch (ParsingException exception)
+                {
+                    throw new XamlParserException(tokenizer.TextPosition, exception.Message);
+                }
+                catch (Exception exception)
+                {
+                    throw new XamlParserException(tokenizer.TextPosition, "", exception);
+                }
             }
 
             return document;

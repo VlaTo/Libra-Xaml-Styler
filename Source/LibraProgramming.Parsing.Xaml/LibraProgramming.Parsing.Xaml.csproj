@@ -49,6 +49,8 @@
   <ItemGroup>
     <Compile Include="Core\XamlDocumentValidator.cs" />
     <Compile Include="EmptyEnumerator.cs" />
+    <Compile Include="TextPosition.cs" />
+    <Compile Include="TextPositionExtension.cs" />
     <Compile Include="Tokens\XamlStringToken.cs" />
     <Compile Include="Tokens\XamlTerminalToken.cs" />
     <Compile Include="Tokens\XamlToken.cs" />
@@ -67,8 +69,8 @@
     <Compile Include="XamlNameTable.cs" />
     <Compile Include="XamlNodeEnumerator.cs" />
     <Compile Include="XamlNodeList.cs" />
-    <Compile Include="XamlParsingException.cs" />
-    <Compile Include="TokenizerException.cs" />
+    <Compile Include="XamlParserException.cs" />
+    <Compile Include="ParsingException.cs" />
     <Compile Include="XamlAttribute.cs" />
     <Compile Include="Core\XamlNamespaceDeclaration.cs" />
     <Compile Include="Core\XamlNamespaceResolver.cs" />
