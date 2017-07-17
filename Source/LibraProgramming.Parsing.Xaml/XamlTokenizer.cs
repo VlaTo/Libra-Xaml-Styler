@@ -6,6 +6,32 @@ using LibraProgramming.Parsing.Xaml.Tokens;
 
 namespace LibraProgramming.Parsing.Xaml
 {
+    internal sealed class TextPosition
+    {
+        public static readonly TextPosition Empty;
+
+        public int Line
+        {
+            get;
+        }
+
+        public int Position
+        {
+            get;
+        }
+
+        internal TextPosition(int line, int position)
+        {
+            Line = line;
+            Position = position;
+        }
+
+        static TextPosition()
+        {
+            Empty = new TextPosition(0, 0);
+        }
+    }
+
     internal sealed class XamlTokenizer : IDisposable
     {
         private const int EndOfStream = -1;
@@ -18,6 +44,12 @@ namespace LibraProgramming.Parsing.Xaml
         private int position;
         private bool eof;
 
+        public TextPosition TextPosition
+        {
+            get;
+            private set;
+        }
+
         public XamlTokenizer(TextReader reader, int bufferSize)
         {
             this.reader = reader;
@@ -25,6 +57,7 @@ namespace LibraProgramming.Parsing.Xaml
             buffer = new char[bufferSize];
             count = 0;
             position = 0;
+            TextPosition = TextPosition.Empty;
         }
 
         public void Dispose()
@@ -173,7 +206,6 @@ namespace LibraProgramming.Parsing.Xaml
 
         private enum TokenizerState
         {
-            Failed = -1,
             Unknown,
             Reading,
             EndOfDocument

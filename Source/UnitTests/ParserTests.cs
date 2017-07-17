@@ -34,19 +34,10 @@ namespace UnitTests
             await Assert.ThrowsExceptionAsync<XamlParsingException>(() => XamlDocument.ParseAsync(input));
         }
 
-        /*[TestMethod, Ignore]
-        public async Task ThreeWhitespacesInput()
-        {
-            var test = new String(' ', 3);
-            var document = await XamlDocument.ParseAsync(test);
-
-            Assert.IsNotNull(document);
-            Assert.IsNotNull(document.Root);
-            Assert.IsFalse(document.Root.HasChildNodes);
-        }*/
-
         [DataRow(null, "test", "test", DisplayName = "Stripped inlined tag")]
+        [DataRow(null, "test", "test ", DisplayName = "Stripped inlined with trailing whitespace tag")]
         [DataRow("t", "test", "t:test", DisplayName = "Prefixed inlined tag")]
+        [DataRow("t", "test", "t:test ", DisplayName = "Prefixed inlined with trailing whitespace tag")]
         [DataRow("t", "test.element.node", "t:test.element.node", DisplayName = "Complex inlined tag")]
         [TestMethod]
         public async Task SimpleInlinedPrefixedTag(string prefix, string name, string tag)
@@ -68,24 +59,6 @@ namespace UnitTests
 
             Assert.AreEqual(name, node.LocalName);
         }
-
-        /*[TestMethod, Ignore]
-        public async Task SimpleInlinedNonPrefixedTag()
-        {
-            const string name = "Application.Property.Attribute";
-            const string test = "<" + name + "/>";
-            var document = await XamlDocument.ParseAsync(test);
-
-            Assert.IsNotNull(document);
-            Assert.IsNotNull(document.Root);
-            Assert.IsTrue(document.Root.HasChildNodes);
-            Assert.AreEqual(1, document.Root.ChildNodes.Count);
-
-            var node = document.Root.FirstChild;
-
-            Assert.AreEqual(String.Empty, node.Prefix);
-            Assert.AreEqual(name, node.LocalName);
-        }*/
 
         [DataRow("test", DisplayName = "Stripped name")]
         [DataRow("t:test", DisplayName = "Prefixed name")]
@@ -112,6 +85,30 @@ namespace UnitTests
 
             Assert.IsNotNull(attr);
             Assert.AreEqual(attribute, attr.Name);
+        }
+
+        [TestMethod]
+        public async Task CheckNodeWithChild()
+        {
+            const string test = "<Page><Grid></Grid></Page>";
+
+            var document = await XamlDocument.ParseAsync(test);
+
+            Assert.IsNotNull(document);
+            Assert.IsNotNull(document.Root);
+            Assert.IsTrue(document.Root.HasChildNodes);
+            Assert.AreEqual(1, document.Root.ChildNodes.Count);
+            Assert.IsInstanceOfType(document.Root.FirstChild, typeof(XamlElement));
+
+            var element = (XamlElement)document.Root.FirstChild;
+
+            Assert.AreEqual(1, element.ChildNodes.Count);
+        }
+
+        [TestMethod]
+        public async Task InvalidTagName()
+        {
+            await Assert.ThrowsExceptionAsync<XamlParsingException>(() => XamlDocument.ParseAsync("< Page />"));
         }
     }
 }

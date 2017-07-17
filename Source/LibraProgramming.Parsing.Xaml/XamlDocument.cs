@@ -144,7 +144,7 @@ namespace LibraProgramming.Parsing.Xaml
             return CreateName(prefix, localName, ns);
         }
 
-        private XamlName CreateElementName(string prefix, string localName, string ns)
+        public XamlName CreateElementName(string prefix, string localName, string ns)
         {
             return CreateName(prefix, localName, ns);
         }
