@@ -10,7 +10,22 @@ namespace LibraProgramming.Parsing.Xaml
 
         public XamlWriter(TextWriter writer)
         {
+            if (null == writer)
+            {
+                throw new ArgumentNullException(nameof(writer));
+            }
+
             this.writer = writer;
+        }
+
+        public XamlWriter(Stream stream)
+        {
+            if (null == stream)
+            {
+                throw new ArgumentNullException(nameof(stream));
+            }
+
+            writer = new StreamWriter(stream);
         }
 
         public void Dispose()

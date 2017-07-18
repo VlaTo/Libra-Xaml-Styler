@@ -249,6 +249,7 @@ namespace LibraProgramming.Parsing.Xaml
                         {
                             prefix = null;
                             name = text;
+
                         }).ConfigureAwait(false);
 
                         break;
@@ -298,6 +299,7 @@ namespace LibraProgramming.Parsing.Xaml
                         state = await ParseOpeningTagAttributeNameDotAsync(text =>
                         {
                             name += ('.' + text);
+
                         }).ConfigureAwait(false);
 
                         break;
@@ -359,6 +361,7 @@ namespace LibraProgramming.Parsing.Xaml
                         state = await ParseOpeningTagAttributeQuotedValueAsync(text =>
                         {
                             value += text;
+
                         }).ConfigureAwait(false);
 
                         break;
@@ -385,23 +388,18 @@ namespace LibraProgramming.Parsing.Xaml
 
                     case ParserState.ClosingTagBegin:
                     {
-                        var token = await tokenizer.GetTokenAsync().ConfigureAwait(false);
-
-                        if (false == token.IsString(out string text))
+                        state = await ParseClosingTagBeginAsync(text =>
                         {
-                            state = ParserState.Failed;
-                            break;
-                        }
+                            name = text;
 
-                        name = text;
-                        state = ParserState.ClosingTagNameTrailing;
+                        }).ConfigureAwait(false);
 
                         break;
                     }
 
-                    case ParserState.ClosingTagNameTrailing:
+                    case ParserState.ClosingTagName:
                     {
-                        state = await ParseClosingTagNameTrailingAsync().ConfigureAwait(false);
+                        state = await ParseClosingTagNameAsync().ConfigureAwait(false);
                         break;
                     }
 
@@ -419,27 +417,22 @@ namespace LibraProgramming.Parsing.Xaml
 
                     case ParserState.ClosingTagNameDot:
                     {
-                        var token = await tokenizer.GetTokenAsync();
-
-                        if (false == token.IsString(out string text))
+                        state = await ParseClosingTagNameDotAsync(text =>
                         {
-                            throw new ParsingException();
-                        }
+                            name += ('.' + text);
 
-                        token = await tokenizer.GetTokenAsync();
+                        }).ConfigureAwait(false);
 
-                        if (token.IsDot())
+                        break;
+                    }
+
+                    case ParserState.ClosingTagNameTrailing:
+                    {
+                        state = await ParseClosingTagNameTrailingAsync(text =>
                         {
-                            break;
-                        }
+                            name += text;
 
-                        if (token.IsCloseBracket())
-                        {
-                            state = ParserState.ClosingTagNameClose;
-                            break;
-                        }
-
-                        state = ParserState.Failed;
+                        }).ConfigureAwait(false);
 
                         break;
                     }
@@ -448,7 +441,16 @@ namespace LibraProgramming.Parsing.Xaml
                     {
                         var tagname = document.CreateElementName(prefix, name, null);
 
-                        state = ParseClosingTagNameClose(nodes, tagname);
+                        if (CheckClosingTag(nodes, tagname))
+                        {
+                            prefix = null;
+                            name = null;
+                            state = ParserState.Begin;
+                        }
+                        else
+                        {
+                            state = ParserState.Failed;
+                        }
 
                         break;
                     }
@@ -489,13 +491,58 @@ namespace LibraProgramming.Parsing.Xaml
             }
         }
 
+        private async Task<ParserState> ParseClosingTagBeginAsync(Action<string> callback)
+        {
+            var token = await tokenizer.GetTokenAsync().ConfigureAwait(false);
+
+            if (false == token.IsString(out string text))
+            {
+                return ParserState.Failed;
+            }
+
+            callback.Invoke(text);
+
+            return ParserState.ClosingTagName;
+        }
+
+        private async Task<ParserState> ParseClosingTagNameDotAsync(Action<string> callback)
+        {
+            var token = await tokenizer.GetTokenAsync().ConfigureAwait(false);
+
+            if (false == token.IsString(out string text))
+            {
+                return ParserState.Failed;
+            }
+
+            callback.Invoke(text);
+
+            return ParserState.ClosingTagNameTrailing;
+        }
+
+        /*token = await tokenizer.GetTokenAsync();
+
+            if (token.IsDot())
+            {
+                break;
+            }
+
+            if (token.IsCloseBracket())
+            {
+                state = ParserState.ClosingTagNameClose;
+                break;
+            }
+
+            state = ParserState.Failed;
+        }*/
+
         private async Task<ParserState> ParseOpeningTagAttributeValueEndAsync()
         {
             var token = await tokenizer.GetTokenAsync().ConfigureAwait(false);
 
             if (token.IsWhitespace())
             {
-                return ParserState.OpeningTagTrailing;
+//                return ParserState.OpeningTagTrailing;
+                return ParserState.OpeningTagAttributeCheck;
             }
 
             if (token.IsSlash())
@@ -852,13 +899,36 @@ namespace LibraProgramming.Parsing.Xaml
             return ParserState.OpeningTagBegin;
         }
 
-        private async Task<ParserState> ParseClosingTagNameTrailingAsync()
+        private async Task<ParserState> ParseClosingTagNameAsync()
         {
             var token = await tokenizer.GetTokenAsync().ConfigureAwait(false);
 
             if (token.IsColon())
             {
                 return ParserState.ClosingTagNamespaceColon;
+            }
+
+            if (token.IsDot())
+            {
+                return ParserState.ClosingTagNameDot;
+            }
+
+            if (token.IsCloseBracket())
+            {
+                return ParserState.ClosingTagNameClose;
+            }
+
+            return ParserState.Failed;
+        }
+
+        private async Task<ParserState> ParseClosingTagNameTrailingAsync(Action<string> callback)
+        {
+            var token = await tokenizer.GetTokenAsync().ConfigureAwait(false);
+
+            if (token.IsString(out string text))
+            {
+                callback.Invoke(text);
+                return ParserState.ClosingTagNameTrailing;
             }
 
             if (token.IsDot())
@@ -912,7 +982,7 @@ namespace LibraProgramming.Parsing.Xaml
             return ParserState.Failed;
         }
 
-        private static ParserState ParseClosingTagNameClose(Stack<XamlNode> nodes, XamlName name)
+        private static bool CheckClosingTag(Stack<XamlNode> nodes, XamlName name)
         {
             var last = nodes.Peek() as XamlElement;
 
@@ -923,12 +993,12 @@ namespace LibraProgramming.Parsing.Xaml
 
             if (false == last.XamlName.Equals(name))
             {
-                return ParserState.Failed;
+                return false;
             }
 
             nodes.Pop();
 
-            return ParserState.Begin;
+            return true;
         }
 
         /// <summary>
@@ -947,7 +1017,7 @@ namespace LibraProgramming.Parsing.Xaml
             OpeningTagNameDot,
             OpeningTagNameTrailing,
             OpeningTagClose,
-            OpeningTagTrailing,
+//            OpeningTagTrailing,
             OpeningTagInline,
             OpeningTagClosed,
             //
@@ -967,10 +1037,11 @@ namespace LibraProgramming.Parsing.Xaml
             OpeningTagSlash,
             //
             ClosingTagBegin,
+            ClosingTagName,
             ClosingTagNamespaceColon,
             ClosingTagNameDot,
-            ClosingTagNameClose,
             ClosingTagNameTrailing,
+            ClosingTagNameClose,
             //
             TagInnerValue,
             TagInnerValueEnd,

@@ -144,19 +144,12 @@ namespace UnitTests
             var assembly = Assembly.GetExecutingAssembly();
             var stream = assembly.GetManifestResourceStream("UnitTests.Samples.Test1.Sample.xaml");
 
-            try
+            using (var reader = new StreamReader(stream))
             {
-                using (var reader = new StreamReader(stream))
-                {
-                    var document = await XamlDocument.ParseAsync(reader);
+                var document = await XamlDocument.ParseAsync(reader);
 
-                    Assert.IsNotNull(document);
-                    Assert.IsNotNull(document.Root);
-                }
-            }
-            catch (XamlParserException exception)
-            {
-                throw exception;
+                Assert.IsNotNull(document);
+                Assert.IsNotNull(document.Root);
             }
         }
     }

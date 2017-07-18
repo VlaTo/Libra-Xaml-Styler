@@ -203,7 +203,7 @@ namespace LibraProgramming.Parsing.Xaml
                 return false;
             }
 
-            if (position == count)
+            if ((0 == count) || (position == (count - 1)))
             {
                 count = await reader.ReadBlockAsync(buffer, 0, buffer.Length);
                 position = 0;

@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
+using System.Reflection;
 using System.Text;
+using System.Threading.Tasks;
 using LibraProgramming.Parsing.Xaml;
 using LibraProgramming.Parsing.Xaml.Visitors;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -11,31 +13,34 @@ namespace UnitTests
     [TestClass]
     public class ReformatTests
     {
-/*
         [TestMethod]
-        public void TestMethod1()
+        public async Task TestMethod1()
         {
-            var text = new StringBuilder();
-            var document = new XamlDocument();
+            var assembly = Assembly.GetExecutingAssembly();
+            var stream = assembly.GetManifestResourceStream("UnitTests.Samples.Test1.Sample.xaml");
+            XamlDocument document;
 
-            document.AppendChild(
-                new XamlElement(document,
-                    document.CreateAttribute() ("uwp", "Node.Property.Path", "using: Test.Sample.Windows"))
-            );
-
-            using (var writer = new StringWriter(text))
+            using (var reader = new StreamReader(stream))
             {
-                var settings = new DocumentReformatSettings
-                {
-                    SpacesBeforeEmptyNodeClose = 1
-                };
-                var visitor = new ReformatXamlVisitor(writer, settings);
+                document = await XamlDocument.ParseAsync(reader);
 
+                Assert.IsNotNull(document);
+                Assert.IsNotNull(document.Root);
+            }
+
+            var text = new StringBuilder();
+            var settings = new DocumentReformatSettings
+            {
+                SpacesBeforeEmptyNodeClose = 1
+            };
+
+            using (var writer = new XamlWriter(new StringWriter(text)))
+            {
+                var visitor = new ReformatXamlVisitor(writer, settings);
                 visitor.Visit(document);
             }
 
             Debug.WriteLine(text.ToString());
         }
-*/
     }
 }
