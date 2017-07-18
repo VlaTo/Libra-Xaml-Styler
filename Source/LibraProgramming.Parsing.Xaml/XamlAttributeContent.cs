@@ -2,18 +2,20 @@
 
 namespace LibraProgramming.Parsing.Xaml
 {
-    internal class XamlTextContent : XamlContent
+    internal class XamlAttributeContent : XamlContent
     {
         private readonly string text;
 
-        public XamlTextContent(string text)
+        public XamlAttributeContent(string text)
         {
             this.text = text;
         }
 
         public override void WriteTo(TextWriter writer)
         {
+            writer.Write('\"');
             writer.Write(text);
+            writer.Write('\"');
         }
     }
 }

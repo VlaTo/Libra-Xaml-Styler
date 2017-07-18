@@ -101,6 +101,18 @@ namespace LibraProgramming.Parsing.Xaml
         /// <summary>
         /// 
         /// </summary>
+        /// <param name="prefix"></param>
+        /// <param name="localName"></param>
+        /// <param name="ns"></param>
+        /// <returns></returns>
+        public XamlName CreateElementName(string prefix, string localName, string ns)
+        {
+            return CreateName(prefix, localName, ns);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
         /// <param name="text"></param>
         /// <returns></returns>
         public static Task<XamlDocument> ParseAsync(string text)
@@ -130,7 +142,7 @@ namespace LibraProgramming.Parsing.Xaml
 
             var document = new XamlDocument();
 
-            using (var tokenizer = new XamlTokenizer(reader, 1024))
+            using (var tokenizer = new XamlTokenizer(reader))
             {
                 try
                 {
@@ -151,11 +163,6 @@ namespace LibraProgramming.Parsing.Xaml
         }
 
         private XamlName CreateAttributeName(string prefix, string localName, string ns)
-        {
-            return CreateName(prefix, localName, ns);
-        }
-
-        public XamlName CreateElementName(string prefix, string localName, string ns)
         {
             return CreateName(prefix, localName, ns);
         }

@@ -1,4 +1,6 @@
-﻿namespace LibraProgramming.Parsing.Xaml
+﻿using System.IO;
+
+namespace LibraProgramming.Parsing.Xaml
 {
     /// <summary>
     /// 
@@ -9,6 +11,6 @@
         /// 
         /// </summary>
         /// <param name="writer"></param>
-        public abstract void WriteTo(XamlWriter writer);
+        public abstract void WriteTo(TextWriter writer);
     }
 }
