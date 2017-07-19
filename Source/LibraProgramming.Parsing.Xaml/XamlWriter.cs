@@ -5,11 +5,24 @@ using System.Text;
 
 namespace LibraProgramming.Parsing.Xaml
 {
-    public sealed class XamlWriter : IDisposable
+    public sealed partial class XamlWriter : IDisposable
     {
-        private TextWriter writer;
+        private XamlOutputWriter writer;
         private bool disposed;
-        private Stack<ElementRec> tags;
+        private Stack<ElementWriteInfo> infos;
+
+        private ElementWriteInfo LastInfo
+        {
+            get
+            {
+                if (0 == infos.Count)
+                {
+                    return null;
+                }
+
+                return infos.Peek();
+            }
+        }
 
         public XamlWriter(TextWriter writer)
             : this()
@@ -19,7 +32,7 @@ namespace LibraProgramming.Parsing.Xaml
                 throw new ArgumentNullException(nameof(writer));
             }
 
-            this.writer = writer;
+            this.writer = new XamlOutputWriter(writer);
         }
 
         public XamlWriter(Stream stream)
@@ -30,12 +43,14 @@ namespace LibraProgramming.Parsing.Xaml
                 throw new ArgumentNullException(nameof(stream));
             }
 
-            writer = new StreamWriter(stream);
+            var streamWriter = new StreamWriter(stream);
+
+            writer = new XamlOutputWriter(streamWriter);
         }
 
         private XamlWriter()
         {
-            tags = new Stack<ElementRec>();
+            infos = new Stack<ElementWriteInfo>();
         }
 
         public void Dispose()
@@ -49,7 +64,7 @@ namespace LibraProgramming.Parsing.Xaml
             {
                 writer.Dispose();
                 writer = null;
-                tags = null;
+                infos = null;
             }
             finally
             {
@@ -61,14 +76,20 @@ namespace LibraProgramming.Parsing.Xaml
         {
             var name = CreateTagName(prefix, localName, namespaceURI);
 
-            writer.Write(' ');
-            writer.Write(name);
+            writer.WriteAttributeBegin();
+            writer.WriteAttributeName(name);
         }
 
         public void WriteAttributeContent(XamlContent content)
         {
-            writer.Write('=');
-            content.WriteTo(writer);
+            var buffer = new StringBuilder();
+
+            using (var temp = new StringWriter(buffer))
+            {
+                content.WriteTo(temp);
+            }
+
+            writer.WriteAttributeValue(buffer.ToString());
         }
 
         public void WriteAttributeEnd()
@@ -78,48 +99,47 @@ namespace LibraProgramming.Parsing.Xaml
         public void WriteElementBegin(string prefix, string localName, string namespaceURI)
         {
             var name = CreateTagName(prefix, localName, namespaceURI);
+            var info = LastInfo;
 
-            if (0 < tags.Count)
+            if (null != info)
             {
-                var rec = tags.Peek();
-                rec.IsEmpty = false;
-                writer.Write('>');
+                info.IsEmpty = false;
+                writer.WriteElementEnd(false);
             }
 
-            tags.Push(new ElementRec(name));
+            infos.Push(new ElementWriteInfo(name));
 
-            writer.Write('<');
-            writer.Write(name);
+            writer.WriteElementBegin(false);
+            writer.WriteElementName(name);
         }
 
         public void WriteElementContent(XamlContent content)
         {
-            var rec = tags.Peek();
+            LastInfo.IsEmpty = false;
 
-            rec.IsEmpty = false;
+            var buffer = new StringBuilder();
 
-            writer.Write('>');
-            content.WriteTo(writer);
+            using (var temp = new StringWriter(buffer))
+            {
+                content.WriteTo(temp);
+            }
+
+            writer.WriteElementValue(buffer.ToString());
         }
 
         public void WriteElementEnd(bool forceInline)
         {
-            var rec = tags.Pop();
-            var canInline = forceInline && rec.IsEmpty;
+            var info = infos.Pop();
 
-            if (canInline)
+            if (forceInline && info.IsEmpty)
             {
-                writer.Write(' ');
-                writer.Write('/');
-                writer.Write('>');
+                writer.WriteElementEnd(true);
+                return;
             }
-            else
-            {
-                writer.Write('<');
-                writer.Write('/');
-                writer.Write(rec.Name);
-                writer.Write('>');
-            }
+
+            writer.WriteElementBegin(true);
+            writer.WriteElementName(info.Name);
+            //writer.WriteElementEnd(false);
         }
 
         private static string CreateTagName(string prefix, string localName, string namespaceURI)
@@ -136,7 +156,10 @@ namespace LibraProgramming.Parsing.Xaml
             return name.ToString();
         }
 
-        private class ElementRec
+        /// <summary>
+        /// 
+        /// </summary>
+        private class ElementWriteInfo
         {
             public string Name
             {
@@ -149,7 +172,7 @@ namespace LibraProgramming.Parsing.Xaml
                 set;
             }
 
-            public ElementRec(string name)
+            public ElementWriteInfo(string name)
             {
                 Name = name;
                 IsEmpty = true;

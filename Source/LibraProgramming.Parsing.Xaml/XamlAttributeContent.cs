@@ -13,9 +13,7 @@ namespace LibraProgramming.Parsing.Xaml
 
         public override void WriteTo(TextWriter writer)
         {
-            writer.Write('\"');
             writer.Write(text);
-            writer.Write('\"');
         }
     }
 }

@@ -49,6 +49,7 @@
   <ItemGroup>
     <Compile Include="Core\XamlDocumentValidator.cs" />
     <Compile Include="EmptyEnumerator.cs" />
+    <Compile Include="IXamlOutputWriter.cs" />
     <Compile Include="TextPosition.cs" />
     <Compile Include="TextPositionExtension.cs" />
     <Compile Include="Tokens\XamlStringToken.cs" />
@@ -94,6 +95,7 @@
     <Compile Include="XamlTextContent.cs" />
     <Compile Include="XamlTokenizer.cs" />
     <Compile Include="XamlWriter.cs" />
+    <Compile Include="XamlWriter.XamlOutputWriter.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Localization\Neutral\Resource.resx">

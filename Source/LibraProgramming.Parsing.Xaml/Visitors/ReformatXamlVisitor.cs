@@ -44,7 +44,7 @@ namespace LibraProgramming.Parsing.Xaml.Visitors
 
             base.VisitElement(element);
 
-            if (false == element.HasChildNodes)
+            if (false == element.HasChildNodes && false == String.IsNullOrEmpty(element.Value))
             {
                 var content = new XamlTextContent(element.Value);
                 writer.WriteElementContent(content);
