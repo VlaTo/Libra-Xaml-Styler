@@ -34,17 +34,6 @@ namespace UnitTests
             await Assert.ThrowsExceptionAsync<XamlParsingException>(() => XamlDocument.ParseAsync(input));
         }
 
-        /*[TestMethod, Ignore]
-        public async Task ThreeWhitespacesInput()
-        {
-            var test = new String(' ', 3);
-            var document = await XamlDocument.ParseAsync(test);
-
-            Assert.IsNotNull(document);
-            Assert.IsNotNull(document.Root);
-            Assert.IsFalse(document.Root.HasChildNodes);
-        }*/
-
         [DataRow(null, "test", "test", DisplayName = "Stripped inlined tag")]
         [DataRow("t", "test", "t:test", DisplayName = "Prefixed inlined tag")]
         [DataRow("t", "test.element.node", "t:test.element.node", DisplayName = "Complex inlined tag")]
@@ -68,24 +57,6 @@ namespace UnitTests
 
             Assert.AreEqual(name, node.LocalName);
         }
-
-        /*[TestMethod, Ignore]
-        public async Task SimpleInlinedNonPrefixedTag()
-        {
-            const string name = "Application.Property.Attribute";
-            const string test = "<" + name + "/>";
-            var document = await XamlDocument.ParseAsync(test);
-
-            Assert.IsNotNull(document);
-            Assert.IsNotNull(document.Root);
-            Assert.IsTrue(document.Root.HasChildNodes);
-            Assert.AreEqual(1, document.Root.ChildNodes.Count);
-
-            var node = document.Root.FirstChild;
-
-            Assert.AreEqual(String.Empty, node.Prefix);
-            Assert.AreEqual(name, node.LocalName);
-        }*/
 
         [DataRow("test", DisplayName = "Stripped name")]
         [DataRow("t:test", DisplayName = "Prefixed name")]
