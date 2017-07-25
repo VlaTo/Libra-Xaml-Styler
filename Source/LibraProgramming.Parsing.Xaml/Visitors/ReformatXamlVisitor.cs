@@ -13,16 +13,6 @@ namespace LibraProgramming.Parsing.Xaml.Visitors
             this.settings = settings;
         }
 
-        public override void Visit(XamlDocument document)
-        {
-            base.Visit(document);
-        }
-
-        protected override void VisitRoot(XamlNode element)
-        {
-            base.VisitRoot(element);
-        }
-
         protected override void VisitAttribute(XamlAttribute attribute)
         {
             writer.WriteAttributeBegin(attribute.Prefix, attribute.LocalName, attribute.NamespaceURI);
@@ -33,24 +23,21 @@ namespace LibraProgramming.Parsing.Xaml.Visitors
             writer.WriteAttributeEnd();
         }
 
-        protected override void VisitComment(XamlComment comment)
-        {
-            base.VisitComment(comment);
-        }
-
         protected override void VisitElement(XamlElement element)
         {
             writer.WriteElementBegin(element.Prefix, element.LocalName, element.NamespaceURI);
 
             base.VisitElement(element);
 
-            if (false == element.HasChildNodes && false == String.IsNullOrEmpty(element.Value))
+            var empty = false == element.HasChildNodes && false == String.IsNullOrEmpty(element.Value);
+
+            if (empty)
             {
                 var content = new XamlTextContent(element.Value);
                 writer.WriteElementContent(content);
             }
 
-            writer.WriteElementEnd(true);
+            writer.WriteElementEnd(empty);
         }
     }
 }

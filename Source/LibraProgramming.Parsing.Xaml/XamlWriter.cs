@@ -1,28 +1,17 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Text;
 
 namespace LibraProgramming.Parsing.Xaml
 {
-    public sealed partial class XamlWriter : IDisposable
+    // http://referencesource.microsoft.com/#System.Xml/System/Xml/Core/XmlTextWriter.cs,789e9b2b28f9b93e
+    public sealed class XamlWriter
     {
-        private XamlOutputWriter writer;
-        private bool disposed;
-        private Stack<ElementWriteInfo> infos;
-
-        private ElementWriteInfo LastInfo
-        {
-            get
-            {
-                if (0 == infos.Count)
-                {
-                    return null;
-                }
-
-                return infos.Peek();
-            }
-        }
+        private State currentState;
+        private Token lastToken;
+        private TagInfo[] stack;
+        private int stackIndex;
+        private readonly TextWriter writer;
 
         public XamlWriter(TextWriter writer)
             : this()
@@ -32,7 +21,7 @@ namespace LibraProgramming.Parsing.Xaml
                 throw new ArgumentNullException(nameof(writer));
             }
 
-            this.writer = new XamlOutputWriter(writer);
+            this.writer = writer;
         }
 
         public XamlWriter(Stream stream)
@@ -43,33 +32,16 @@ namespace LibraProgramming.Parsing.Xaml
                 throw new ArgumentNullException(nameof(stream));
             }
 
-            var streamWriter = new StreamWriter(stream);
-
-            writer = new XamlOutputWriter(streamWriter);
+            writer = new StreamWriter(stream);
         }
 
         private XamlWriter()
         {
-            infos = new Stack<ElementWriteInfo>();
-        }
-
-        public void Dispose()
-        {
-            if (disposed)
-            {
-                throw new ObjectDisposedException(GetType().ToString());
-            }
-
-            try
-            {
-                writer.Dispose();
-                writer = null;
-                infos = null;
-            }
-            finally
-            {
-                disposed = true;
-            }
+            stack = new TagInfo[10];
+            stackIndex = 0;
+            stack[stackIndex].Init();
+            currentState = State.Start;
+            lastToken = Token.Empty;
         }
 
         public void WriteAttributeBegin(string prefix, string localName, string namespaceURI)
@@ -104,10 +76,10 @@ namespace LibraProgramming.Parsing.Xaml
             if (null != info)
             {
                 info.IsEmpty = false;
-                writer.WriteElementEnd(false);
+                //writer.WriteElementEnd(false);
             }
 
-            infos.Push(new ElementWriteInfo(name));
+            stack.Push(new TagInfo(name));
 
             writer.WriteElementBegin(false);
             writer.WriteElementName(name);
@@ -129,7 +101,7 @@ namespace LibraProgramming.Parsing.Xaml
 
         public void WriteElementEnd(bool forceInline)
         {
-            var info = infos.Pop();
+            var info = stack.Pop();
 
             if (forceInline && info.IsEmpty)
             {
@@ -140,6 +112,11 @@ namespace LibraProgramming.Parsing.Xaml
             writer.WriteElementBegin(true);
             writer.WriteElementName(info.Name);
             //writer.WriteElementEnd(false);
+        }
+
+        public void Flush()
+        {
+            writer.Flush();
         }
 
         private static string CreateTagName(string prefix, string localName, string namespaceURI)
@@ -156,27 +133,83 @@ namespace LibraProgramming.Parsing.Xaml
             return name.ToString();
         }
 
+        private void PushStack()
+        {
+            if (stackIndex == (stack.Length - 1))
+            {
+                var temp = new TagInfo[stack.Length + 10];
+
+                if (stackIndex > 0)
+                {
+                    Array.Copy(stack, temp, stackIndex + 1);
+                }
+
+                stack = temp;
+            }
+
+            stackIndex++;
+
+            stack[stackIndex].Init();
+        }
+
         /// <summary>
         /// 
         /// </summary>
-        private class ElementWriteInfo
+        private struct TagInfo
         {
             public string Name
-            {
-                get;
-            }
-
-            public bool IsEmpty
             {
                 get;
                 set;
             }
 
-            public ElementWriteInfo(string name)
+            public string Prefix
             {
-                Name = name;
-                IsEmpty = true;
+                get;
+                set;
             }
+
+            public string DefaultNs
+            {
+                get;
+                set;
+            }
+
+            public void Init()
+            {
+                Name = null;
+                Prefix = null;
+                DefaultNs = String.Empty;
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        private enum Token
+        {
+            StartElement,
+            EndElement,
+            LongEndElement,
+            StartAttribute,
+            EndAttribute,
+            Content,
+            Empty
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        private enum State
+        {
+            Failed = -1,
+            Start,
+            Prolog,
+            Element,
+            Attribute,
+            Content,
+            Epilog,
+            Closed
         }
     }
 }
