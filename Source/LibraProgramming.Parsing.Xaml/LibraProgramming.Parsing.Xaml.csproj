@@ -9,7 +9,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>LibraProgramming.Parsing.Xaml</RootNamespace>
     <AssemblyName>LibraProgramming.Parsing.Xaml</AssemblyName>
-    <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.7</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkProfile />
   </PropertyGroup>
@@ -49,10 +49,14 @@
   <ItemGroup>
     <Compile Include="Core\XamlDocumentValidator.cs" />
     <Compile Include="EmptyEnumerator.cs" />
+    <Compile Include="IXamlOutputWriter.cs" />
+    <Compile Include="TextPosition.cs" />
+    <Compile Include="TextPositionExtension.cs" />
     <Compile Include="Tokens\XamlStringToken.cs" />
     <Compile Include="Tokens\XamlTerminalToken.cs" />
     <Compile Include="Tokens\XamlToken.cs" />
     <Compile Include="Tokens\XamlTokenExtension.cs" />
+    <Compile Include="XamlAttributeContent.cs" />
     <Compile Include="XamlAttributesCollection.XamlAttributesArray.cs" />
     <Compile Include="XamlAttributesCollection.cs" />
     <Compile Include="XamlChildNodes.cs" />
@@ -67,8 +71,8 @@
     <Compile Include="XamlNameTable.cs" />
     <Compile Include="XamlNodeEnumerator.cs" />
     <Compile Include="XamlNodeList.cs" />
-    <Compile Include="XamlParsingException.cs" />
-    <Compile Include="TokenizerException.cs" />
+    <Compile Include="XamlParserException.cs" />
+    <Compile Include="ParsingException.cs" />
     <Compile Include="XamlAttribute.cs" />
     <Compile Include="Core\XamlNamespaceDeclaration.cs" />
     <Compile Include="Core\XamlNamespaceResolver.cs" />
@@ -90,8 +94,8 @@
     <Compile Include="XamlTerminal.cs" />
     <Compile Include="XamlTextContent.cs" />
     <Compile Include="XamlTokenizer.cs" />
-    <Compile Include="XamlValueBuilder.cs" />
     <Compile Include="XamlWriter.cs" />
+    <Compile Include="XamlWriter.XamlOutputWriter.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Localization\Neutral\Resource.resx">

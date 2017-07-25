@@ -11,14 +11,14 @@ namespace LibraProgramming.Parsing.Xaml.Visitors
                 throw new ArgumentNullException(nameof(document));
             }
 
-            VisitDocument(document);
+            VisitRoot(document.Root);
         }
 
-        protected virtual void VisitDocument(XamlDocument document)
+        protected virtual void VisitRoot(XamlNode element)
         {
-            foreach (XamlNode child in document.ChildNodes)
+            foreach (XamlNode child in element.ChildNodes)
             {
-                ProcessChild(child);
+                VisitNode(child);
             }
         }
 
@@ -39,16 +39,16 @@ namespace LibraProgramming.Parsing.Xaml.Visitors
 
             foreach (XamlNode child in element.ChildNodes)
             {
-                ProcessChild(child);
+                VisitNode(child);
             }
         }
 
         protected virtual void VisitUnknown(XamlNode node)
         {
-            throw new XamlParsingException();
+            throw new ParsingException();
         }
 
-        private void ProcessChild(XamlNode node)
+        private void VisitNode(XamlNode node)
         {
             switch (node.NodeType)
             {

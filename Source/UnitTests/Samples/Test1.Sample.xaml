@@ -1,0 +1,80 @@
+﻿<core:ContentPage
+    x:Class="LibraProgramming.Sample.Views.MainPage"
+    x:Uid="MainPage"
+    
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:core="using:LibraProgramming.Sample.Core"
+    xmlns:t="using:LibraProgramming.Windows.UI.Xaml.StateTriggers"
+    xmlns:converters="using:LibraProgramming.Windows.Converters"
+
+    mc:Ignorable="d"
+    
+    d:DataContext="{d:DesignData Source=/ViewModels/Design/MainPage.xaml}"
+    DataContext="{Binding Path=MainPageViewModel, Source={StaticResource ViewModelLocator}}">
+    <core:ContentPage.Resources>
+        <converters:InlineConverter x:Key="TemperatureConverter" Converting="OnTemperatureConverting" />
+    </core:ContentPage.Resources>
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+        <StackPanel
+            x:Name="CurrentWeatherConditionsPanel"
+            Grid.Row="0"
+            Orientation="Horizontal">
+            <Grid
+                Margin="48,12">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+                <TextBlock
+                    x:Name="LocationTextBlock"
+                    Grid.Row="0"
+                    Style="{ThemeResource SubtitleTextBlockStyle}"
+                    Text="{Binding Path=Forecast.CityName}"
+                />
+                <TextBlock
+                    x:Name="TemperatureTextBlock"
+                    Grid.Row="1"
+                    Style="{ThemeResource HeaderTextBlockStyle}">
+                    <Run Text="ddd" />
+                    <Run Text="QQQ" />
+                </TextBlock>
+            </Grid>
+        </StackPanel>
+        <VisualStateManager.VisualStateGroups>
+            <VisualStateGroup>
+                <VisualState>
+                    <VisualState.StateTriggers>
+                        <t:CompositeStateTrigger
+                            AggregationType="Any">
+                            <t:AdaptiveSizeStateTrigger MinWindowWidth="500" />
+                            <t:UserInteractionModeTrigger InteractionMode="Mouse" />
+                        </t:CompositeStateTrigger>
+                    </VisualState.StateTriggers>
+                    <VisualState.Setters>
+                        <Setter Target="CurrentWeatherConditionsPanel.Orientation" Value="Horizontal" />
+                    </VisualState.Setters>
+                </VisualState>
+                <VisualState>
+                    <VisualState.StateTriggers>
+                        <t:CompositeStateTrigger
+                            AggregationType="Any">
+                            <t:AdaptiveSizeStateTrigger MinWindowWidth="0" />
+                            <t:UserInteractionModeTrigger InteractionMode="Touch" />
+                        </t:CompositeStateTrigger>
+                    </VisualState.StateTriggers>
+                    <VisualState.Setters>
+                        <Setter Target="CurrentWeatherConditionsPanel.Orientation" Value="Vertical" />
+                    </VisualState.Setters>
+                </VisualState>
+            </VisualStateGroup>
+        </VisualStateManager.VisualStateGroups>
+    </Grid>
+</core:ContentPage>

@@ -1,6 +1,4 @@
 ﻿using System;
-using System.IO;
-using System.Text;
 
 namespace LibraProgramming.Parsing.Xaml.Visitors
 {
@@ -15,16 +13,24 @@ namespace LibraProgramming.Parsing.Xaml.Visitors
             this.settings = settings;
         }
 
-        protected override void VisitDocument(XamlDocument document)
+        public override void Visit(XamlDocument document)
         {
-            base.VisitDocument(document);
+            base.Visit(document);
+        }
+
+        protected override void VisitRoot(XamlNode element)
+        {
+            base.VisitRoot(element);
         }
 
         protected override void VisitAttribute(XamlAttribute attribute)
         {
-            writer.WriteStartAttribute(attribute.Prefix, attribute.LocalName, attribute.NamespaceURI);
-            writer.WriteAttributeContent(CreateAttributeContent(attribute));
-            writer.WriteEndAttribute();
+            writer.WriteAttributeBegin(attribute.Prefix, attribute.LocalName, attribute.NamespaceURI);
+
+            var content = new XamlAttributeContent(attribute.Value);
+
+            writer.WriteAttributeContent(content);
+            writer.WriteAttributeEnd();
         }
 
         protected override void VisitComment(XamlComment comment)
@@ -34,52 +40,17 @@ namespace LibraProgramming.Parsing.Xaml.Visitors
 
         protected override void VisitElement(XamlElement element)
         {
-            /*var name = CreateNameString(element);
+            writer.WriteElementBegin(element.Prefix, element.LocalName, element.NamespaceURI);
 
-            writer.Write('<');
-            writer.Write(name);
+            base.VisitElement(element);
 
-            if (false == element.HasChildNodes)
+            if (false == element.HasChildNodes && false == String.IsNullOrEmpty(element.Value))
             {
-                for (var count = 0; count < settings.SpacesBeforeEmptyNodeClose; count++)
-                {
-                    writer.Write(' ');
-                }
-
-                writer.Write('/');
+                var content = new XamlTextContent(element.Value);
+                writer.WriteElementContent(content);
             }
 
-            writer.Write('>');*/
-
-            if (element.HasChildNodes)
-            {
-                base.VisitElement(element);
-
-                /*writer.Write('<');
-                writer.Write('/');
-                writer.Write(name);
-                writer.Write('>');*/
-            }
-        }
-
-/*
-        private string CreateNameString(XamlNode node)
-        {
-            var name = new StringBuilder();
-
-            if (false == String.IsNullOrEmpty(node.Prefix))
-            {
-                name.Append(node.Prefix);
-                name.Append(':');
-            }
-
-            return name.Append(node.Name).ToString();
-        }
-*/
-
-        private XamlContent CreateAttributeContent(XamlAttribute attribute)
-        {
-            return new XamlTextContent(attribute.Value);
+            writer.WriteElementEnd(true);
         }
     }
 }

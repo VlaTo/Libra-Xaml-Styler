@@ -11,20 +11,21 @@ namespace LibraProgramming.Parsing.Xaml
         private const int EndOfStream = -1;
 
         private readonly TextReader reader;
-        private readonly char[] buffer;
         private bool disposed;
         private TokenizerState state;
-        private int count;
-        private int position;
-        private bool eof;
+        private int input;
 
-        public XamlTokenizer(TextReader reader, int bufferSize)
+        public TextPosition TextPosition
+        {
+            get;
+            private set;
+        }
+
+        public XamlTokenizer(TextReader reader)
         {
             this.reader = reader;
             state = TokenizerState.Unknown;
-            buffer = new char[bufferSize];
-            count = 0;
-            position = 0;
+            TextPosition = TextPosition.Empty;
         }
 
         public void Dispose()
@@ -32,8 +33,13 @@ namespace LibraProgramming.Parsing.Xaml
             Dispose(true);
         }
 
-        public async Task<XamlToken> GetTokenAsync()
+        public Task<XamlToken> GetTokenAsync()
         {
+            if (disposed)
+            {
+                throw new ObjectDisposedException("tokenizer");
+            }
+
             var text = new StringBuilder();
 
             while (true)
@@ -42,11 +48,13 @@ namespace LibraProgramming.Parsing.Xaml
                 {
                     case TokenizerState.Unknown:
                     {
-                        var flag = await AdvancePosition();
+                        input = reader.Read();
 
-                        if (flag)
+                        if (EndOfStream != input)
                         {
+                            TextPosition = TextPosition.Begin();
                             state = TokenizerState.Reading;
+
                             break;
                         }
 
@@ -57,13 +65,11 @@ namespace LibraProgramming.Parsing.Xaml
 
                     case TokenizerState.EndOfDocument:
                     {
-                        return XamlToken.End;
+                        return Task.FromResult(XamlToken.End);
                     }
 
                     case TokenizerState.Reading:
                     {
-                        var input = ReadCurrentChar();
-
                         if (EndOfStream == input)
                         {
                             state = TokenizerState.EndOfDocument;
@@ -76,17 +82,17 @@ namespace LibraProgramming.Parsing.Xaml
                         {
                             if (0 < text.Length)
                             {
-                                return XamlToken.String(text.ToString());
+                                return Task.FromResult<XamlToken>(XamlToken.String(text.ToString()));
                             }
 
-                            await AdvancePosition();
+                            input = reader.Read();
 
-                            return XamlToken.Terminal(current);
+                            return Task.FromResult<XamlToken>(XamlToken.Terminal(current));
                         }
 
                         text.Append(current);
 
-                        await AdvancePosition();
+                        input = reader.Read();
 
                         break;
                     }
@@ -114,7 +120,28 @@ namespace LibraProgramming.Parsing.Xaml
                 XamlTerminals.Whitespace,
                 '\t',
                 '\r',
-                '\n'
+                '\n',
+                '!',
+                '@',
+                '#',
+                '$',
+                '%',
+                '&',
+                '*',
+                '(',
+                ')',
+                '-',
+                '_',
+                '=',
+                '+',
+                '[',
+                ']',
+                '{',
+                '}',
+                ':',
+                ';',
+                '\\',
+                '/'
             };
 
             return 0 <= Array.IndexOf(terminals, ch);
@@ -140,40 +167,8 @@ namespace LibraProgramming.Parsing.Xaml
             }
         }
 
-        internal int ReadCurrentChar()
-        {
-            return eof ? EndOfStream : buffer[position];
-        }
-
-        private async Task<bool> AdvancePosition()
-        {
-            if (eof)
-            {
-                return false;
-            }
-
-            if (position == count)
-            {
-                count = await reader.ReadBlockAsync(buffer, 0, buffer.Length);
-                position = 0;
-
-                if (0 == count)
-                {
-                    eof = true;
-                    return false;
-                }
-
-                return true;
-            }
-
-            position++;
-
-            return true;
-        }
-
         private enum TokenizerState
         {
-            Failed = -1,
             Unknown,
             Reading,
             EndOfDocument
