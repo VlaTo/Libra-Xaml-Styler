@@ -20,12 +20,12 @@ namespace LibraProgramming.Parsing.Xaml.Visitors
             var content = new XamlAttributeContent(attribute.Value);
 
             writer.WriteAttributeContent(content);
-            writer.WriteAttributeEnd();
+            writer.WriteEndAttribute();
         }
 
         protected override void VisitElement(XamlElement element)
         {
-            writer.WriteElementBegin(element.Prefix, element.LocalName, element.NamespaceURI);
+            writer.WriteStartElement(element.Prefix, element.LocalName, element.NamespaceURI);
 
             base.VisitElement(element);
 
@@ -37,7 +37,7 @@ namespace LibraProgramming.Parsing.Xaml.Visitors
                 writer.WriteElementContent(content);
             }
 
-            writer.WriteElementEnd(empty);
+            writer.WriteEndElement(empty);
         }
     }
 }
