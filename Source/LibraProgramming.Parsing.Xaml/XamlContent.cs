@@ -11,6 +11,6 @@ namespace LibraProgramming.Parsing.Xaml
         /// 
         /// </summary>
         /// <param name="writer"></param>
-        public abstract void WriteTo(TextWriter writer);
+        public abstract void WriteTo(XamlWriter writer);
     }
 }

@@ -96,6 +96,7 @@
     <Compile Include="XamlTextContent.cs" />
     <Compile Include="XamlTokenizer.cs" />
     <Compile Include="XamlWriter.cs" />
+    <Compile Include="XamlWriter.Encoder.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Localization\Neutral\Resource.resx">

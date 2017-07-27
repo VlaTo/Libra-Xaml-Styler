@@ -1,23 +1,109 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
-using System.Runtime.InteropServices;
-using System.Text;
 
 namespace LibraProgramming.Parsing.Xaml
 {
-    // http://referencesource.microsoft.com/#System.Xml/System/Xml/Core/XmlTextWriter.cs,789e9b2b28f9b93e
-    public sealed class XamlWriter
+    public enum FormattingMode
     {
+        None,
+        Indent
+    }
+
+    // http://referencesource.microsoft.com/#System.Xml/System/Xml/Core/XmlTextWriter.cs,789e9b2b28f9b93e
+    public sealed partial class XamlWriter : IDisposable
+    {
+        private const int MaxNamespacesWalkCount = 16;
+        private const string nsPrefix = "xmlns";
+        private const string xmlPrefix = "xml";
+
         private readonly TextWriter writer;
         private State currentState;
         private State[] stateTransitions;
         private Token lastToken;
         private TagInfo[] stack;
         private Namespace[] namespaces;
-        private bool indented;
         private int stackIndex;
         private int namespaceIndex;
         private bool hasNamespaces;
+        private bool indented;
+        private int indentation;
+        private char quoteChar;
+        private IDictionary<string, int> nsHashtable;
+        private bool useNsHashtable;
+        private FormattingMode formattingMode;
+        private readonly XamlEncoder encoder;
+
+        public FormattingMode FormattingMode
+        {
+            get
+            {
+                return formattingMode;
+            }
+            set
+            {
+                formattingMode = value;
+                indented = FormattingMode.Indent == value;
+            }
+        }
+
+        public int Indentation
+        {
+            get
+            {
+                return indentation;
+            }
+            set
+            {
+                if (0 > value)
+                {
+                    throw new ArgumentOutOfRangeException(nameof(value));
+                }
+
+                indentation = value;
+            }
+        }
+
+        public char IndentChar
+        {
+            get;
+            set;
+        }
+
+        public bool HasNamespaces
+        {
+            get
+            {
+                return hasNamespaces;
+            }
+            set
+            {
+                if (State.Start != currentState)
+                {
+                    throw new InvalidOperationException();
+                }
+
+                hasNamespaces = value;
+            }
+        }
+
+        public char QuoteChar
+        {
+            get
+            {
+                return quoteChar;
+            }
+            set
+            {
+                if ('\"' != value && '\'' != value)
+                {
+                    throw new ArgumentException("");
+                }
+
+                quoteChar = value;
+            }
+        }
 
         public XamlWriter(TextWriter writer)
             : this()
@@ -28,6 +114,7 @@ namespace LibraProgramming.Parsing.Xaml
             }
 
             this.writer = writer;
+            encoder = new XamlEncoder(writer);
         }
 
         public XamlWriter(Stream stream)
@@ -39,6 +126,7 @@ namespace LibraProgramming.Parsing.Xaml
             }
 
             writer = new StreamWriter(stream);
+            encoder = new XamlEncoder(writer);
         }
 
         private XamlWriter()
@@ -47,35 +135,55 @@ namespace LibraProgramming.Parsing.Xaml
             stackIndex = 0;
             stack[stackIndex].Init();
             stateTransitions = stateTransitionsDefault;
+            namespaces = new Namespace[20];
+            namespaceIndex = -1;
+            hasNamespaces = true;
             currentState = State.Start;
             lastToken = Token.Empty;
+            quoteChar = '\"';
+            IndentChar = ' ';
+            indentation = 2;
         }
 
-        public void WriteAttributeBegin(string prefix, string localName, string namespaceURI)
+        /// <summary>
+        /// 
+        /// </summary>
+        public void WriteStartDocument()
         {
-            var name = CreateTagName(prefix, localName, namespaceURI);
-
-            writer.WriteAttributeBegin();
-            writer.WriteAttributeName(name);
+            WriteStartDocumentInternal(-1);
         }
 
-        public void WriteAttributeContent(XamlContent content)
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="standalone"></param>
+        public void WriteStartDocument(bool standalone)
         {
-            var buffer = new StringBuilder();
-
-            using (var temp = new StringWriter(buffer))
-            {
-                content.WriteTo(temp);
-            }
-
-            writer.WriteAttributeValue(buffer.ToString());
+            WriteStartDocumentInternal(standalone ? 1 : 0);
         }
 
-        public void WriteEndAttribute()
+        /// <summary>
+        /// 
+        /// </summary>
+        public void WriteEndDocument()
         {
             try
             {
-                AutoComplete(Token.EndAttribute);
+                AutoCompleteAll();
+
+                if (State.Epilog != currentState)
+                {
+                    if (State.Closed == currentState)
+                    {
+                        throw new ArgumentException();
+                    }
+
+                    throw new ArgumentException();
+                }
+
+                stateTransitions = stateTransitionsDefault;
+                currentState = State.Start;
+                lastToken = Token.Empty;
             }
             catch
             {
@@ -84,7 +192,13 @@ namespace LibraProgramming.Parsing.Xaml
             }
         }
 
-        public void WriteStartElement(string prefix, string localName, string namespaceURI)
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="prefix"></param>
+        /// <param name="localName"></param>
+        /// <param name="ns"></param>
+        public void WriteStartElement(string prefix, string localName, string ns)
         {
             try
             {
@@ -104,7 +218,7 @@ namespace LibraProgramming.Parsing.Xaml
 
                     stack[stackIndex].Mixed = stack[stackIndex - 1].Mixed;
 
-                    if (null == namespaceURI)
+                    if (null == ns)
                     {
                         if (false == String.IsNullOrEmpty(prefix) && (-1 == LookupNamespace(prefix)))
                         {
@@ -115,7 +229,7 @@ namespace LibraProgramming.Parsing.Xaml
                     {
                         if (null == prefix)
                         {
-                            var str = FindPrefix(namespaceURI);
+                            var str = FindPrefix(ns);
 
                             if (null != str)
                             {
@@ -123,22 +237,22 @@ namespace LibraProgramming.Parsing.Xaml
                             }
                             else
                             {
-                                PushNamespace(null, namespaceURI, false);
+                                PushNamespace(null, ns, false);
                             }
                         }
                         else if (0 == prefix.Length)
                         {
-                            PushNamespace(null, namespaceURI, false);
+                            PushNamespace(null, ns, false);
                         }
                         else
                         {
-                            if (0 == namespaceURI.Length)
+                            if (0 == ns.Length)
                             {
                                 prefix = null;
                             }
 
-                            VerifyPrefix(prefix, namespaceURI);
-                            PushNamespace(prefix, namespaceURI, false);
+                            VerifyPrefixXml(prefix, ns);
+                            PushNamespace(prefix, ns, false);
                         }
                     }
 
@@ -153,9 +267,9 @@ namespace LibraProgramming.Parsing.Xaml
                 }
                 else
                 {
-                    if (false == String.IsNullOrEmpty(namespaceURI) || false == String.IsNullOrEmpty(prefix))
+                    if (false == String.IsNullOrEmpty(ns) || false == String.IsNullOrEmpty(prefix))
                     {
-                        throw new ArgumentException("", nameof(namespaceURI));
+                        throw new ArgumentException("", nameof(ns));
                     }
                 }
 
@@ -169,20 +283,180 @@ namespace LibraProgramming.Parsing.Xaml
             }
         }
 
-        private int LookupNamespace(string prefix)
+        /// <summary>
+        /// 
+        /// </summary>
+        public void WriteEndElement()
         {
-            throw new NotImplementedException();
+            WriteEndElementInternal(false);
         }
 
-        private string FindPrefix(string namespaceUri)
+        /// <summary>
+        /// 
+        /// </summary>
+        public void WriteLongEndElement()
         {
-            throw new NotImplementedException();
+            WriteEndElementInternal(true);
         }
 
-        public void WriteElementContent(XamlContent content)
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="prefix"></param>
+        /// <param name="localName"></param>
+        /// <param name="ns"></param>
+        public void WriteStartAttribute(string prefix, string localName, string ns)
         {
-            LastInfo.IsEmpty = false;
+            try
+            {
+                AutoComplete(Token.StartAttribute);
 
+                if (HasNamespaces)
+                {
+                    if (false == String.IsNullOrEmpty(prefix))
+                    {
+                        prefix = null;
+                    }
+
+                    if (null == prefix && false == String.Equals(nsPrefix, localName, StringComparison.InvariantCulture))
+                    {
+                        prefix = nsPrefix;
+                    }
+
+                    if (String.Equals(xmlPrefix, prefix, StringComparison.InvariantCulture))
+                    {
+                        if ("lang" == localName)
+                        {
+
+                        }
+                        else if ("space" == localName)
+                        {
+
+                        }
+                    }
+                    else if (String.Equals(nsPrefix, prefix, StringComparison.InvariantCulture))
+                    {
+                        if (String.IsNullOrEmpty(localName))
+                        {
+                            localName = prefix;
+                            prefix = null;
+//                            this.prefixForXmlNs = null;
+                        }
+                        else
+                        {
+//                            this.prefixForXmlNs = localName;
+                        }
+                    }
+                    else if (null == prefix && String.Equals(xmlPrefix, localName, StringComparison.InvariantCulture))
+                    {
+
+                    }
+                    else
+                    {
+                        if (null == ns)
+                        {
+                            if (null != prefix && (LookupNamespace(prefix) == -1))
+                            {
+                                throw new ArgumentException();
+                            }
+                        }
+                        else if (0 == ns.Length)
+                        {
+                            prefix = String.Empty;
+                        }
+                        else
+                        {
+                            VerifyPrefixXml(prefix, null);
+
+                            if (null != prefix && -1 < LookupNamespaceInCurrentScope(prefix))
+                            {
+                                prefix = null;
+                            }
+
+                            var definedPrefix = FindPrefix(ns);
+
+                            if (null != definedPrefix && (null == prefix || prefix == definedPrefix))
+                            {
+                                prefix = definedPrefix;
+                            }
+                            else
+                            {
+                                if (null == prefix)
+                                {
+                                    prefix = GeneratePrefix();
+                                }
+
+                                PushNamespace(prefix, ns, false);
+                            }
+                        }
+                    }
+
+                    if (false == String.IsNullOrEmpty(prefix))
+                    {
+                        writer.Write(prefix);
+                        writer.Write(':');
+                    }
+                }
+                else
+                {
+                    if (false == String.IsNullOrEmpty(ns) || false == String.IsNullOrEmpty(prefix))
+                    {
+                        throw new ArgumentException();
+                    }
+
+                    if ("xml:lang" == localName)
+                    {
+
+                    }
+                    else if ("xml:space" == localName)
+                    {
+
+                    }
+                }
+
+                writer.Write(localName);
+                writer.Write('=');
+                writer.Write(QuoteChar);
+            }
+            catch
+            {
+                currentState = State.Failed;
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public void WriteEndAttribute()
+        {
+            try
+            {
+                AutoComplete(Token.EndAttribute);
+            }
+            catch
+            {
+                currentState = State.Failed;
+                throw;
+            }
+        }
+
+        public void WriteCharEntity(char ch)
+        {
+            try
+            {
+                AutoComplete(Token.Content);
+                encoder.WriteCharEntity(ch);
+            }
+            catch
+            {
+                currentState = State.Failed;
+                throw;
+            }
+        }
+
+        /*public void WriteAttributeContent(XamlContent content)
+        {
             var buffer = new StringBuilder();
 
             using (var temp = new StringWriter(buffer))
@@ -190,12 +464,24 @@ namespace LibraProgramming.Parsing.Xaml
                 content.WriteTo(temp);
             }
 
-            writer.WriteElementValue(buffer.ToString());
-        }
+            writer.WriteAttributeValue(buffer.ToString());
+        }*/
 
-        public void WriteEndElement()
+        public void WriteString(string text)
         {
-            WriteEndElementInternal(false);
+            try
+            {
+                if (false == String.IsNullOrEmpty(text))
+                {
+                    AutoComplete(Token.Content);
+                    writer.Write(text);
+                }
+            }
+            catch
+            {
+                currentState = State.Failed;
+                throw;
+            }
         }
 
         public void WriteName(string name)
@@ -212,6 +498,20 @@ namespace LibraProgramming.Parsing.Xaml
             }
         }
 
+        /*public void WriteElementContent(XamlContent content)
+        {
+            LastInfo.IsEmpty = false;
+
+            var buffer = new StringBuilder();
+
+            using (var temp = new StringWriter(buffer))
+            {
+                content.WriteTo(temp);
+            }
+
+            writer.WriteElementValue(buffer.ToString());
+        }*/
+
         public void Close()
         {
             try
@@ -220,14 +520,61 @@ namespace LibraProgramming.Parsing.Xaml
             }
             catch
             {
-
-                throw;
+            }
+            finally
+            {
+                currentState = State.Closed;
+                writer.Close();
             }
         }
 
         public void Flush()
         {
             writer.Flush();
+        }
+
+        public string LookupPrefix(string @namespace)
+        {
+            if (String.IsNullOrEmpty(@namespace))
+            {
+//                throw new ArgumentException(Res.GetString(Res.Xml_EmptyName));
+                throw new ArgumentException();
+            }
+
+            var prefix = FindPrefix(@namespace);
+
+            if (prefix == null && @namespace == stack[stackIndex].DefaultNs)
+            {
+                prefix = String.Empty;
+            }
+
+            return prefix;
+        }
+
+        public void Dispose()
+        {
+            Flush();
+            Close();
+        }
+
+        private void WriteStartDocumentInternal(int standalone)
+        {
+            try
+            {
+                if (State.Start != currentState)
+                {
+                    throw new InvalidOperationException();
+                }
+
+                stateTransitions = stateTransitionsDocument;
+                currentState = State.Prolog;
+
+            }
+            catch
+            {
+                currentState = State.Failed;
+                throw;
+            }
         }
 
         private void AutoComplete(Token token)
@@ -263,9 +610,9 @@ namespace LibraProgramming.Parsing.Xaml
                         WriteEndStartTag(false);
                     }
 
-                    if (this.indented && State.Start != currentState)
+                    if (indented && State.Start != currentState)
                     {
-                        Indent(false);
+                        Ident(false);
                     }
 
                     break;
@@ -366,7 +713,7 @@ namespace LibraProgramming.Parsing.Xaml
                     writer.Write('<');
                     writer.Write('/');
 
-                    if (null != stack[stackIndex].Prefix)
+                    if (HasNamespaces && null != stack[stackIndex].Prefix)
                     {
                         writer.Write(stack[stackIndex].Prefix);
                         writer.Write(':');
@@ -378,8 +725,7 @@ namespace LibraProgramming.Parsing.Xaml
 
                 var prevNsIndex = stack[stackIndex].PreviosNsIndex;
 
-//                if (useNsHashtable && prevNsTop < nsTop)
-                if (prevNsIndex < namespaceIndex)
+                if (useNsHashtable && prevNsIndex < namespaceIndex)
                 {
                     PopNamespaces(prevNsIndex + 1, namespaceIndex);
                 }
@@ -395,27 +741,347 @@ namespace LibraProgramming.Parsing.Xaml
             }
         }
 
-        private void WriteEndStartTag(bool empty)
+        private void Ident(bool beforeEndElement)
         {
-            for (var index = namespaceIndex; index > stack[stackIndex].PreviosNsIndex; index--)
+            if (stackIndex == 0)
             {
-                if (false == namespaces[index].IsDeclared)
+                writer.WriteLine();
+            }
+            else if (false == stack[stackIndex].Mixed)
+            {
+                writer.WriteLine();
+
+                var ident = beforeEndElement ? stackIndex - 1 : stackIndex;
+
+                for (ident *= Indentation; ident > 0; ident--)
                 {
-                    writer.Write("xmlns");
-                    writer.Write(':');
-                    writer.Write(namespaces[index].Prefix);
-                    writer.Write('=');
-                    //textWriter.Write(this.quoteChar);
-                    writer.Write('\"');
-//                    xmlEncoder.Write(nsStack[i].ns);
-                    writer.Write(namespaces[index].Name);
-//                    textWriter.Write(this.quoteChar);
-                    writer.Write('\"');
+                    writer.Write(IndentChar);
                 }
             }
         }
 
-        private static string CreateTagName(string prefix, string localName, string namespaceURI)
+        private void PushNamespace(string prefix, string ns, bool declared)
+        {
+            /*if (XmlReservedNs.NsXmlNs == ns)
+            {
+                throw new ArgumentException(Res.GetString(Res.Xml_CanNotBindToReservedNamespace));
+            }*/
+
+            if (null == prefix)
+            {
+                switch (stack[stackIndex].DefaultNamespaceState)
+                {
+                    case NamespaceState.DeclaredButNotWrittenOut:
+                    {
+                        //Debug.Assert(declared == true, "Unexpected situation!!");
+                        // the first namespace that the user gave us is what we
+                        // like to keep. 
+                        break;
+                    }
+
+                    case NamespaceState.Uninitialized:
+                    case NamespaceState.NotDeclaredButInScope:
+                    {
+                        // we now got a brand new namespace that we need to remember
+                        stack[stackIndex].DefaultNs = ns;
+                        break;
+                    }
+
+                    default:
+                    {
+//                        Debug.Assert(false, "Should have never come here");
+                        return;
+                    }
+                }
+
+                stack[stackIndex].DefaultNamespaceState = declared
+                    ? NamespaceState.DeclaredAndWrittenOut
+                    : NamespaceState.DeclaredButNotWrittenOut;
+            }
+            else
+            {
+                if (prefix.Length != 0 && ns.Length == 0)
+                {
+//                    throw new ArgumentException(Res.GetString(Res.Xml_PrefixForEmptyNs));
+                    throw new ArgumentException();
+                }
+
+                var existingNsIndex = LookupNamespace(prefix);
+
+                if (existingNsIndex != -1 && namespaces[existingNsIndex].Name == ns)
+                {
+                    // it is already in scope.
+                    if (declared)
+                    {
+                        namespaces[existingNsIndex].IsDeclared = true;
+                    }
+                }
+                else
+                {
+                    // see if prefix conflicts for the current element
+                    if (declared)
+                    {
+                        if (existingNsIndex != -1 && existingNsIndex > stack[stackIndex].PreviosNsIndex)
+                        {
+                            namespaces[existingNsIndex].IsDeclared = true; // old one is silenced now
+                        }
+                    }
+
+                    AddNamespace(prefix, ns, declared);
+                }
+            }
+        }
+
+        private void AddNamespace(string prefix, string ns, bool declared)
+        {
+            var position = ++namespaceIndex;
+
+            if (position == namespaces.Length)
+            {
+                var temp = new Namespace[position * 2];
+
+                Array.Copy(namespaces, temp, position);
+                namespaces = temp;
+            }
+
+            namespaces[position].Set(prefix, ns, declared);
+
+            if (useNsHashtable)
+            {
+                AddToNamespaceHashtable(position);
+            }
+            else if (position == MaxNamespacesWalkCount)
+            {
+                // add all
+//                nsHashtable = new Dictionary<string, int>(new SecureStringHasher());
+                nsHashtable = new Dictionary<string, int>(StringComparer.InvariantCulture);
+
+                for (var index = 0; index <= position; index++)
+                {
+                    AddToNamespaceHashtable(index);
+                }
+
+                useNsHashtable = true;
+            }
+        }
+
+        private void AddToNamespaceHashtable(int index)
+        {
+            var prefix = namespaces[index].Prefix;
+
+            if (nsHashtable.TryGetValue(prefix, out int existingNsIndex))
+            {
+                namespaces[index].PrevNsIndex = existingNsIndex;
+            }
+
+            nsHashtable[prefix] = index;
+        }
+
+        private void PopNamespaces(int indexFrom, int indexTo)
+        {
+//            Debug.Assert(useNsHashtable);
+            for (var index = indexTo; index >= indexFrom; index--)
+            {
+//                Debug.Assert(nsHashtable.ContainsKey(nsStack[index].prefix));
+                if (-1 == namespaces[index].PrevNsIndex)
+                {
+                    nsHashtable.Remove(namespaces[index].Prefix);
+                }
+                else
+                {
+                    nsHashtable[namespaces[index].Prefix] = namespaces[index].PrevNsIndex;
+                }
+            }
+        }
+
+        private string GeneratePrefix()
+        {
+            var temp = 1 + stack[stackIndex].PrefixCount++;
+            return String.Format(CultureInfo.InvariantCulture, "d{0:d}p{1:d}", stackIndex, temp);
+
+            /*return "d" + stackIndex.ToString(CultureInfo.InvariantCulture)
+                + "p" + temp.ToString(CultureInfo.InvariantCulture);*/
+        }
+
+        private int LookupNamespace(string prefix)
+        {
+            if (useNsHashtable)
+            {
+                if (nsHashtable.TryGetValue(prefix, out int nsIndex))
+                {
+                    return nsIndex;
+                }
+            }
+
+            for (var index = namespaceIndex; index >= 0; index--)
+            {
+                if (String.Equals(namespaces[index].Prefix, prefix, StringComparison.InvariantCulture))
+                {
+                    return index;
+                }
+            }
+
+            return -1;
+        }
+
+        private int LookupNamespaceInCurrentScope(string prefix)
+        {
+            if (useNsHashtable)
+            {
+                if (nsHashtable.TryGetValue(prefix, out int nsIndex))
+                {
+                    if (nsIndex > stack[stackIndex].PreviosNsIndex)
+                    {
+                        return nsIndex;
+                    }
+                }
+            }
+
+            for (var index = namespaceIndex; index > stack[stackIndex].PreviosNsIndex; index--)
+            {
+                if (String.Equals(namespaces[index].Prefix, prefix, StringComparison.InvariantCulture))
+                {
+                    return index;
+                }
+            }
+
+            return -1;
+        }
+
+        private string FindPrefix(string ns)
+        {
+            for (var index = namespaceIndex; index >= 0; index--)
+            {
+                if (false == String.Equals(namespaces[index].Name, ns, StringComparison.InvariantCulture))
+                {
+                    continue;
+                }
+
+                if (index == LookupNamespace(namespaces[index].Prefix))
+                {
+                    return namespaces[index].Prefix;
+                }
+            }
+
+            return null;
+        }
+
+        private void WriteNameInternal(string name, bool isNCName)
+        {
+            ValidateName(name, isNCName);
+            writer.Write(name);
+        }
+
+        private void ValidateName(string name, bool isNCName)
+        {
+            if (String.IsNullOrEmpty(name))
+            {
+//                throw new ArgumentException(Res.GetString(Res.Xml_EmptyName));
+                throw new ArgumentException();
+            }
+
+            /*var nameLength = name.Length;
+
+            // Namespaces supported
+            if (hasNamespaces)
+            {
+                var colonPosition = -1;
+                var position = ValidateNames.ParseNCName(name);
+
+                Continue:
+                if (position == nameLength)
+                {
+                    return;
+                }
+
+                // we have prefix:localName
+                if (name[position] == ':')
+                {
+                    if (!isNCName)
+                    {
+                        // first colon in qname
+                        if (colonPosition == -1)
+                        {
+                            // make sure it is not the first or last characters
+                            if (position > 0 && position + 1 < nameLength)
+                            {
+                                colonPosition = position;
+                                // Because of the back-compat bug (described above) parse the rest as Nmtoken
+                                position++;
+                                position += ValidateNames.ParseNmtoken(name, position);
+                                goto Continue;
+                            }
+                        }
+                    }
+                }
+            }
+            // Namespaces not supported
+            else
+            {
+                if (ValidateNames.IsNameNoNamespaces(name))
+                {
+                    return;
+                }
+            }
+            throw new ArgumentException(Res.GetString(Res.Xml_InvalidNameChars, name));*/
+        }
+
+        private void WriteEndAttributeQuote()
+        {
+            /*if (this.specialAttr != SpecialAttr.None)
+            {
+                // Ok, now to handle xmlspace, etc.
+                HandleSpecialAttribute();
+            }*/
+
+            encoder.EndAttribute();
+            writer.Write(quoteChar);
+        }
+
+
+        private void WriteEndStartTag(bool empty)
+        {
+            encoder.StartAttribute(false);
+
+            for (var index = namespaceIndex; index > stack[stackIndex].PreviosNsIndex; index--)
+            {
+                if (namespaces[index].IsDeclared)
+                {
+                    continue;
+                }
+
+                writer.Write(nsPrefix);
+                writer.Write(':');
+                writer.Write(namespaces[index].Prefix);
+                writer.Write('=');
+                writer.Write(quoteChar);
+                encoder.Write(namespaces[index].Name);
+                writer.Write(quoteChar);
+            }
+
+            if (false == String.Equals(stack[stackIndex].DefaultNs, stack[stackIndex - 1].DefaultNs) &&
+                (NamespaceState.DeclaredButNotWrittenOut == stack[stackIndex].DefaultNamespaceState))
+            {
+                writer.Write(nsPrefix);
+                writer.Write('=');
+                writer.Write(quoteChar);
+                encoder.Write(stack[stackIndex].DefaultNs);
+                writer.Write(quoteChar);
+                stack[stackIndex].DefaultNamespaceState = NamespaceState.DeclaredAndWrittenOut;
+            }
+
+            encoder.EndAttribute();
+
+            if (empty)
+            {
+                writer.Write(' ');
+                writer.Write('/');
+            }
+
+            writer.Write('>');
+        }
+
+        /*private static string CreateTagName(string prefix, string localName, string namespaceURI)
         {
             var name = new StringBuilder();
 
@@ -427,7 +1093,7 @@ namespace LibraProgramming.Parsing.Xaml
             name.Append(localName);
 
             return name.ToString();
-        }
+        }*/
 
         private void PushStack()
         {
@@ -446,6 +1112,26 @@ namespace LibraProgramming.Parsing.Xaml
             stackIndex++;
 
             stack[stackIndex].Init();
+        }
+
+        private static void VerifyPrefixXml(string prefix, string ns)
+        {
+            if (prefix == null || prefix.Length != 3)
+            {
+                return;
+            }
+
+            if ((prefix[0] == 'x' || prefix[0] == 'X') &&
+                (prefix[1] == 'm' || prefix[1] == 'M') &&
+                (prefix[2] == 'l' || prefix[2] == 'L'))
+            {
+                //                    if (XmlReservedNs.NsXml != ns)
+                if (false == String.Equals(nsPrefix, ns, StringComparison.InvariantCulture))
+                {
+                    //                        throw new ArgumentException(Res.GetString(Res.Xml_InvalidPrefix));
+                    throw new ArgumentException();
+                }
+            }
         }
 
         /// <summary>
@@ -471,6 +1157,12 @@ namespace LibraProgramming.Parsing.Xaml
             }
 
             public string Prefix
+            {
+                get;
+                set;
+            }
+
+            public int PrefixCount
             {
                 get;
                 set;

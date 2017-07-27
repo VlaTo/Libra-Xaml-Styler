@@ -1,6 +1,4 @@
-﻿using System.IO;
-
-namespace LibraProgramming.Parsing.Xaml
+﻿namespace LibraProgramming.Parsing.Xaml
 {
     internal class XamlAttributeContent : XamlContent
     {
@@ -11,9 +9,9 @@ namespace LibraProgramming.Parsing.Xaml
             this.text = text;
         }
 
-        public override void WriteTo(TextWriter writer)
+        public override void WriteTo(XamlWriter writer)
         {
-            writer.Write(text);
+            writer.WriteString(text);
         }
     }
 }
