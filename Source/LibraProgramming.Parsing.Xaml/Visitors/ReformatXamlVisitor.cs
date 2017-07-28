@@ -13,6 +13,13 @@ namespace LibraProgramming.Parsing.Xaml.Visitors
             this.settings = settings;
         }
 
+        public override void Visit(XamlDocument document)
+        {
+            writer.WriteStartDocument();
+            base.Visit(document);
+            writer.WriteEndDocument();
+        }
+
         protected override void VisitAttribute(XamlAttribute attribute)
         {
             writer.WriteStartAttribute(attribute.Prefix, attribute.LocalName, attribute.NamespaceURI);

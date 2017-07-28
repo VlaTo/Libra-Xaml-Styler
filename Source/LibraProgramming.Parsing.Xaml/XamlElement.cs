@@ -10,12 +10,24 @@ namespace LibraProgramming.Parsing.Xaml
         private readonly XamlName name;
         private XamlLinkedNode lastChild;
 
+        /// <summary>
+        /// 
+        /// </summary>
         public override string Name => XamlName.Name;
 
+        /// <summary>
+        /// 
+        /// </summary>
         public override string Prefix => XamlName.Prefix;
 
+        /// <summary>
+        /// 
+        /// </summary>
         public override string LocalName => XamlName.LocalName;
 
+        /// <summary>
+        /// 
+        /// </summary>
         public bool IsEmpty
         {
             get
@@ -42,6 +54,16 @@ namespace LibraProgramming.Parsing.Xaml
             }
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        public override string NamespaceURI => XamlName.NamespaceURI;
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="index"></param>
+        /// <returns></returns>
         public XamlElement this[int index]
         {
             get
