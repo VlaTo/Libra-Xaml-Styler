@@ -238,7 +238,8 @@ namespace LibraProgramming.Parsing.Xaml
 
         public string GetNamespaceOfPrefix(string ns)
         {
-            throw new NotImplementedException();
+            var str = GetNamespaceOfPrefixInternal(ns);
+            return str ?? String.Empty;
         }
 
         public virtual XamlNode RemoveChild(XamlNode node)
@@ -318,6 +319,55 @@ namespace LibraProgramming.Parsing.Xaml
                 prefix = name.Substring(0, position);
                 localName = name.Substring(position + 1);
             }
+        }
+
+        internal string GetNamespaceOfPrefixInternal()
+        {
+            var doc = OwnerDocument;
+
+            if (null != doc)
+            {
+                var prefix = doc.NameTable.GetName(Prefix, LocalName, NamespaceURI);
+
+                if (null == prefix)
+                {
+                    return null;
+                }
+                
+                for (var node = this; null != node;)
+                {
+                    switch (node.NodeType)
+                    {
+                        case XamlNodeType.Element:
+                        {
+                            var element = (XamlElement) node;
+
+                            if (0 < element.Attributes.Count)
+                            {
+                                if(prefix.Le)
+                            }
+
+                            break;
+                        }
+
+                        case XamlNodeType.Attribute:
+                        {
+                            node = ((XamlAttribute) node).ParentNode;
+                            break;
+                        }
+
+                        default:
+                        {
+                            node = node.ParentNode;
+                            break;
+                        }
+                    }
+
+
+                }
+            }
+
+            return null;
         }
 
         protected internal void SetParent(XamlNode value)

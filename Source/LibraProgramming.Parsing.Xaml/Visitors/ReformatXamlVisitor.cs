@@ -33,7 +33,9 @@ namespace LibraProgramming.Parsing.Xaml.Visitors
 
         protected override void VisitElement(XamlElement element)
         {
-            writer.WriteStartElement(element.Prefix, element.LocalName, element.NamespaceURI);
+            var ns = element.GetNamespaceOfPrefix(element.NamespaceURI);
+
+            writer.WriteStartElement(element.Prefix, element.LocalName, ns);
 
             base.VisitElement(element);
 
