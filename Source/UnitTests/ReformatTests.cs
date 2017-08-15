@@ -35,7 +35,12 @@ namespace UnitTests
 
             using (var writer = new XamlWriter(new StringWriter(text)))
             {
-                var visitor = new ReformatXamlVisitor(writer, settings);
+                var visitor = new ReformatXamlVisitor(writer);
+
+                writer.NewLineBeforeAttribute = true;
+                writer.FormattingMode = FormattingMode.Indent;
+                writer.Indentation = 4;
+
                 visitor.Visit(document);
             }
 

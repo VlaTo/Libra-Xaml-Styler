@@ -5,12 +5,10 @@ namespace LibraProgramming.Parsing.Xaml.Visitors
     public class ReformatXamlVisitor : XamlNodeVisitor
     {
         private readonly XamlWriter writer;
-        private readonly DocumentReformatSettings settings;
 
-        public ReformatXamlVisitor(XamlWriter writer, DocumentReformatSettings settings)
+        public ReformatXamlVisitor(XamlWriter writer)
         {
             this.writer = writer;
-            this.settings = settings;
         }
 
         public override void Visit(XamlDocument document)
@@ -22,8 +20,6 @@ namespace LibraProgramming.Parsing.Xaml.Visitors
 
         protected override void VisitAttribute(XamlAttribute attribute)
         {
-//            var ns = attribute.GetNamespaceOfPrefix(attribute.Prefix);
-
             writer.WriteStartAttribute(attribute.Prefix, attribute.LocalName, attribute.NamespaceURI);
 
             var content = new XamlAttributeContent(attribute.Value);

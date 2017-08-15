@@ -5,9 +5,19 @@ using System.IO;
 
 namespace LibraProgramming.Parsing.Xaml
 {
+    /// <summary>
+    /// 
+    /// </summary>
     public enum FormattingMode
     {
+        /// <summary>
+        /// 
+        /// </summary>
         None,
+
+        /// <summary>
+        /// 
+        /// </summary>
         Indent
     }
 
@@ -28,6 +38,7 @@ namespace LibraProgramming.Parsing.Xaml
         private int namespaceIndex;
         private bool hasNamespaces;
         private bool indented;
+        private bool endTrailing;
         private int indentation;
         private char quoteChar;
         private IDictionary<string, int> nsHashtable;
@@ -62,6 +73,18 @@ namespace LibraProgramming.Parsing.Xaml
                 }
 
                 indentation = value;
+            }
+        }
+
+        public bool NewLineBeforeAttribute
+        {
+            get
+            {
+                return endTrailing;
+            }
+            set
+            {
+                endTrailing = value;
             }
         }
 
@@ -313,17 +336,19 @@ namespace LibraProgramming.Parsing.Xaml
 
                 if (HasNamespaces)
                 {
-                    if (false == String.IsNullOrEmpty(prefix))
+                    var comparer = StringComparer.Ordinal;
+
+                    if (null != prefix && 0 == prefix.Length)
                     {
                         prefix = null;
                     }
 
-                    if (null == prefix && false == String.Equals(nsPrefix, localName, StringComparison.InvariantCulture))
+                    if (comparer.Equals("xmlns", ns) && null == prefix && false == comparer.Equals(nsPrefix, localName))
                     {
                         prefix = nsPrefix;
                     }
 
-                    if (String.Equals(xmlPrefix, prefix, StringComparison.InvariantCulture))
+                    if (comparer.Equals(xmlPrefix, prefix))
                     {
                         if ("lang" == localName)
                         {
@@ -334,7 +359,7 @@ namespace LibraProgramming.Parsing.Xaml
 
                         }
                     }
-                    else if (String.Equals(nsPrefix, prefix, StringComparison.InvariantCulture))
+                    else if (comparer.Equals(nsPrefix, prefix))
                     {
                         if (String.IsNullOrEmpty(localName))
                         {
@@ -347,9 +372,8 @@ namespace LibraProgramming.Parsing.Xaml
 //                            this.prefixForXmlNs = localName;
                         }
                     }
-                    else if (null == prefix && String.Equals(xmlPrefix, localName, StringComparison.InvariantCulture))
+                    else if (null == prefix && comparer.Equals(xmlPrefix, localName))
                     {
-
                     }
                     else
                     {
@@ -648,11 +672,11 @@ namespace LibraProgramming.Parsing.Xaml
                     if (State.Attribute == currentState)
                     {
                         WriteEndAttributeQuote();
-                        writer.Write(' ');
+                        WriteAttributePreamble();
                     }
                     else if (State.Element == currentState)
                     {
-                        writer.Write(' ');
+                        WriteAttributePreamble();
                     }
 
                     break;
@@ -972,6 +996,18 @@ namespace LibraProgramming.Parsing.Xaml
             writer.Write(name);
         }
 
+        private void WriteAttributePreamble()
+        {
+            if (NewLineBeforeAttribute)
+            {
+                Ident(false);
+            }
+            else
+            {
+                writer.Write(' ');
+            }
+        }
+
         private void ValidateName(string name, bool isNCName)
         {
             if (String.IsNullOrEmpty(name))
@@ -1074,7 +1110,15 @@ namespace LibraProgramming.Parsing.Xaml
 
             if (empty)
             {
-                writer.Write(' ');
+                if (NewLineBeforeAttribute)
+                {
+                    Ident(true);
+                }
+                else
+                {
+                    writer.Write(' ');
+                }
+
                 writer.Write('/');
             }
 

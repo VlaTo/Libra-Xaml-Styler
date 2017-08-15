@@ -134,7 +134,11 @@ namespace LibraProgramming.VS2017.Package.Commands
 
             using (var writer = new XamlWriter(textWriter))
             {
-                var visitor = new ReformatXamlVisitor(writer, reformatSettings);
+                var visitor = new ReformatXamlVisitor(writer);
+
+                writer.FormattingMode = FormattingMode.Indent;
+                writer.Indentation = 4;
+
                 visitor.Visit(document);
             }
         }

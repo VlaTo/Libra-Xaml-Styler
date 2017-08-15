@@ -237,10 +237,14 @@ namespace LibraProgramming.Parsing.Xaml
             return node;
         }
 
-        public string GetNamespaceOfPrefix(string ns)
+        public string GetNamespaceOfPrefix(string prefix)
         {
-            var str = GetNamespaceOfPrefixInternal(ns);
-            return str ?? String.Empty;
+            return GetNamespaceOfPrefixInternal(prefix) ?? String.Empty;
+        }
+
+        public string GetPrefixOfNamespace(string ns)
+        {
+            return GetPrefixOfNamespaceInternal(ns) ?? String.Empty;
         }
 
         public virtual XamlNode RemoveChild(XamlNode node)
@@ -328,8 +332,6 @@ namespace LibraProgramming.Parsing.Xaml
 
             if (null != doc)
             {
-//                var prefix = doc.NameTable.GetName(Prefix, LocalName, NamespaceURI);
-
                 if (null == prefix)
                 {
                     return null;
@@ -404,6 +406,89 @@ namespace LibraProgramming.Parsing.Xaml
                             break;
                         }
                     }
+                }
+            }
+
+            return null;
+        }
+
+        internal string GetPrefixOfNamespaceInternal(string ns)
+        {
+            var doc = OwnerDocument;
+
+            if (null != doc)
+            {
+                var comparer = StringComparer.Ordinal;
+
+                for (var node = this; null != node;)
+                {
+                    switch (node.NodeType)
+                    {
+                        case XamlNodeType.Element:
+                        {
+                            var element = (XamlElement) node;
+
+                            if (0 <= element.Attributes.Count)
+                            {
+                                var attributes = element.Attributes;
+
+                                for (var index = 0; index < attributes.Count; index++)
+                                {
+                                    var attr = attributes[index];
+
+                                    if (0 == attr.Prefix.Length)
+                                    {
+                                        if (comparer.Equals("xmlns", attr.LocalName) && attr.Value == ns)
+                                        {
+                                            return String.Empty;
+                                        }
+                                    }
+                                    else if (comparer.Equals("xmlns", attr.Prefix))
+                                    {
+                                        if (attr.Value == ns)
+                                        {
+                                            return attr.LocalName;
+                                        }
+                                    }
+                                    else if (comparer.Equals(ns, attr.NamespaceURI))
+                                    {
+                                        return attr.Prefix;
+                                    }
+                                }
+                            }
+
+                            if (comparer.Equals(ns, node.NamespaceURI))
+                            {
+                                return node.Prefix;
+                            }
+
+                            node = node.ParentNode;
+
+                            break;
+                        }
+
+                        case XamlNodeType.Attribute:
+                        {
+                            node = ((XamlAttribute) node).ParentNode;
+                            break;
+                        }
+
+                        default:
+                        {
+                            node = node.ParentNode;
+                            break;
+                        }
+                    }
+                }
+
+                if (comparer.Equals(ns, "xml"))
+                {
+                    return "xml";
+                }
+
+                if (comparer.Equals(ns, "xmlns"))
+                {
+                    return "xmlns";
                 }
             }
 
