@@ -125,7 +125,8 @@ namespace LibraProgramming.Parsing.Xaml
             }
             internal set
             {
-                LastChild = value;
+//                LastChild = value;
+                LastNode = (XamlLinkedNode) value;
             }
         }
 
@@ -321,19 +322,21 @@ namespace LibraProgramming.Parsing.Xaml
             }
         }
 
-        internal string GetNamespaceOfPrefixInternal()
+        internal string GetNamespaceOfPrefixInternal(string prefix)
         {
             var doc = OwnerDocument;
 
             if (null != doc)
             {
-                var prefix = doc.NameTable.GetName(Prefix, LocalName, NamespaceURI);
+//                var prefix = doc.NameTable.GetName(Prefix, LocalName, NamespaceURI);
 
                 if (null == prefix)
                 {
                     return null;
                 }
-                
+
+                var comparer = StringComparer.Ordinal;
+
                 for (var node = this; null != node;)
                 {
                     switch (node.NodeType)
@@ -344,8 +347,47 @@ namespace LibraProgramming.Parsing.Xaml
 
                             if (0 < element.Attributes.Count)
                             {
-                                if(prefix.Le)
+                                var attributes = element.Attributes;
+
+                                if (0 == prefix.Length)
+                                {
+                                    for (var index = 0; index < attributes.Count; index++)
+                                    {
+                                        var attr = attributes[index];
+
+                                        if (0 == attr.Prefix.Length && comparer.Equals("xmlns", attr.LocalName))
+                                        {
+                                            return attr.Value;
+                                        }
+                                    }
+                                }
+                                else
+                                {
+                                    for (var index = 0; index < attributes.Count; index++)
+                                    {
+                                        var attr = attributes[index];
+
+                                        if (comparer.Equals("xmlns", attr.Prefix))
+                                        {
+                                            if (comparer.Equals(attr.LocalName, prefix))
+                                            {
+                                                return attr.Value;
+                                            }
+                                        }
+                                        else if (comparer.Equals(attr.Prefix, prefix))
+                                        {
+                                            return attr.NamespaceURI;
+                                        }
+                                    }
+                                }
                             }
+
+                            if (comparer.Equals(node.Prefix, prefix))
+                            {
+                                return node.NamespaceURI;
+                            }
+
+                            node = node.ParentNode;
 
                             break;
                         }
@@ -362,8 +404,6 @@ namespace LibraProgramming.Parsing.Xaml
                             break;
                         }
                     }
-
-
                 }
             }
 

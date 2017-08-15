@@ -589,7 +589,7 @@ namespace LibraProgramming.Parsing.Xaml
                 throw new InvalidOperationException();
             }
 
-            var state = stateTransitions[(int) token*7 + (int) currentState];
+            var state = stateTransitions[(int) token * 6 + (int) currentState];
 
             if (State.Failed == state)
             {
@@ -1271,24 +1271,25 @@ namespace LibraProgramming.Parsing.Xaml
 
         private static readonly State[] stateTransitionsDefault =
         {
-            //                         State.Start   State.Prolog  State.Element  State.Attribute State.Content State.Epilog State.Closed
-            /* Token.StartElement   */ State.Prolog, State.Prolog, State.Content, State.Failed, State.Failed, 
-            /* Token.EndElement     */ State.Prolog, State.Prolog, State.Content,
-            /* Token.LongEndElement */ State.Prolog, State.Prolog, State.Content,
-            /* Token.StartAttribute */ State.Prolog, State.Prolog, State.Content,
-            /* Token.EndAttribute   */ State.Prolog, State.Prolog, State.Content,
-            /* Token.Content        */ State.Prolog, State.Prolog, State.Content,
+            // Token / State
+            //                   Start          Prolog         Element        Attribute      Content        Epilog
+            /* StartElement   */ State.Element, State.Element, State.Element, State.Element, State.Element, State.Element,
+            /* EndElement     */ State.Failed, State.Failed, State.Content, State.Content, State.Content, State.Failed,
+            /* LongEndElement */ State.Failed, State.Failed, State.Content, State.Content, State.Content, State.Failed,
+            /* StartAttribute */ State.Attribute, State.Failed, State.Attribute, State.Attribute, State.Failed, State.Failed,
+            /* EndAttribute   */ State.Failed, State.Failed, State.Failed, State.Element, State.Failed, State.Failed,
+            /* Content        */ State.Content, State.Content, State.Content, State.Attribute, State.Content, State.Epilog
         };
 
         private static readonly State[] stateTransitionsDocument =
         {
-            //                         State.Start   State.Prolog  State.Element  State.Attribute State.Content State.Epilog State.Closed
-            /* Token.StartElement   */ State.Prolog, State.Prolog, State.Content, State.Failed, State.Failed, 
-            /* Token.EndElement     */ State.Prolog, State.Prolog, State.Content,
-            /* Token.LongEndElement */ State.Prolog, State.Prolog, State.Content,
-            /* Token.StartAttribute */ State.Prolog, State.Prolog, State.Content,
-            /* Token.EndAttribute   */ State.Prolog, State.Prolog, State.Content,
-            /* Token.Content        */ State.Prolog, State.Prolog, State.Content,
+            //                   Start         Prolog        Element        Attribute     Content       Epilog       
+            /* StartElement   */ State.Failed, State.Element, State.Element, State.Element, State.Element, State.Failed,
+            /* EndElement     */ State.Failed, State.Failed, State.Content, State.Content, State.Content, State.Failed,
+            /* LongEndElement */ State.Failed, State.Failed, State.Content, State.Content, State.Content, State.Failed,
+            /* StartAttribute */ State.Failed, State.Failed, State.Attribute, State.Attribute, State.Failed, State.Failed,
+            /* EndAttribute   */ State.Failed, State.Failed, State.Failed, State.Element, State.Failed, State.Failed,
+            /* Content        */ State.Failed, State.Failed, State.Content, State.Attribute, State.Content, State.Failed
         };
     }
 }
