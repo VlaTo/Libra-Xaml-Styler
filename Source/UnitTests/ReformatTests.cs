@@ -1,4 +1,6 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Reflection;
 using System.Text;
@@ -27,6 +29,8 @@ namespace UnitTests
                 Assert.IsNotNull(document.Root);
             }
 
+            ReformatPrefixes(document);
+
             var text = new StringBuilder();
             var settings = new DocumentReformatSettings
             {
@@ -45,6 +49,35 @@ namespace UnitTests
             }
 
             Debug.WriteLine(text.ToString());
+        }
+
+        private static void ReformatPrefixes(XamlDocument document)
+        {
+            var comparer = StringComparer.Ordinal;
+            var names = new Dictionary<string, XamlName>(comparer);
+
+            foreach (var name in document.NameTable)
+            {
+                if (false == comparer.Equals("xmlns", name.Prefix))
+                {
+                    continue;
+                }
+
+                names.Add(name.LocalName, name);
+            }
+
+            var length = names.Count;
+
+            foreach (var kvp in names)
+            {
+                var key = kvp.Key.ToLowerInvariant();
+
+                if (key.Length >= length)
+                {
+                    var ns = document.GetNamespaceOfPrefix(key);
+                    Debug.WriteLine("{0} => {1}", key, ns);
+                }
+            }
         }
     }
 }

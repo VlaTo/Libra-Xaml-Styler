@@ -1,8 +1,10 @@
 ﻿using System;
+using System.Collections;
+using System.Collections.Generic;
 
 namespace LibraProgramming.Parsing.Xaml
 {
-    internal sealed class XamlNameTable
+    internal sealed class XamlNameTable:IEnumerable<XamlName>
     {
         private const int DefaultNamesSize = 64;
 
@@ -85,6 +87,16 @@ namespace LibraProgramming.Parsing.Xaml
             return name;
         }
 
+        public IEnumerator<XamlName> GetEnumerator()
+        {
+            return new Enumerator(names, count);
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
+
         private bool IsSameName(XamlName name, string prefix, string localName, string ns)
         {
             return comparer.Equals(name.LocalName, localName) &&
@@ -114,6 +126,121 @@ namespace LibraProgramming.Parsing.Xaml
 
             names = array;
             mask = temp;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        private class Enumerator : IEnumerator<XamlName>
+        {
+            private readonly XamlName[] names;
+            private bool disposed;
+            private int position;
+
+            public XamlName Current
+            {
+                get
+                {
+                    if (disposed)
+                    {
+                        throw new InvalidOperationException();
+                    }
+
+                    return names[position];
+                }
+            }
+
+            object IEnumerator.Current => Current;
+
+            public Enumerator(XamlName[] names, int count)
+            {
+                position = -1;
+                this.names = CreateCopy(names, count);
+            }
+
+            public void Dispose()
+            {
+                Dispose(true);
+            }
+
+            public bool MoveNext()
+            {
+                EnsureNotDisposed();
+
+                if (-1 == position)
+                {
+                    if (0 == names.Length)
+                    {
+                        return false;
+                    }
+
+                    position = 0;
+
+                    return true;
+                }
+
+                if ((names.Length - 1) <= position)
+                {
+                    return false;
+                }
+
+                position++;
+
+                return true;
+            }
+
+            public void Reset()
+            {
+                EnsureNotDisposed();
+                position = -1;
+            }
+
+            private void Dispose(bool dispose)
+            {
+                if (disposed)
+                {
+                    return;
+                }
+
+                try
+                {
+                    if (dispose)
+                    {
+                        
+                    }
+                }
+                finally
+                {
+                    disposed = true;
+                }
+            }
+
+            private void EnsureNotDisposed()
+            {
+                if (disposed)
+                {
+                    throw new InvalidOperationException();
+                }
+            }
+
+            private XamlName[] CreateCopy(XamlName[] source, int count)
+            {
+                var list = new List<XamlName>(count);
+
+                for (var index = 0; index < source.Length; index++)
+                {
+                    var name = source[index];
+
+                    if (null == name)
+                    {
+                        continue;
+                    }
+
+                    list.Add(name);
+                }
+
+                return list.ToArray();
+            }
         }
     }
 }
