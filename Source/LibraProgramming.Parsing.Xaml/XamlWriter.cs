@@ -1016,10 +1016,10 @@ namespace LibraProgramming.Parsing.Xaml
                 throw new ArgumentException();
             }
 
-            /*var nameLength = name.Length;
+            var nameLength = name.Length;
 
             // Namespaces supported
-            if (hasNamespaces)
+            /*if (hasNamespaces)
             {
                 var colonPosition = -1;
                 var position = ValidateNames.ParseNCName(name);
@@ -1051,6 +1051,7 @@ namespace LibraProgramming.Parsing.Xaml
                     }
                 }
             }
+
             // Namespaces not supported
             else
             {
@@ -1058,8 +1059,10 @@ namespace LibraProgramming.Parsing.Xaml
                 {
                     return;
                 }
-            }
-            throw new ArgumentException(Res.GetString(Res.Xml_InvalidNameChars, name));*/
+            }*/
+
+//            throw new ArgumentException(Res.GetString(Res.Xml_InvalidNameChars, name));
+            throw new ArgumentException();
         }
 
         private void WriteEndAttributeQuote()
@@ -1124,20 +1127,6 @@ namespace LibraProgramming.Parsing.Xaml
 
             writer.Write('>');
         }
-
-        /*private static string CreateTagName(string prefix, string localName, string namespaceURI)
-        {
-            var name = new StringBuilder();
-
-            if (false == String.IsNullOrEmpty(prefix))
-            {
-                name.Append(prefix).Append(':');
-            }
-
-            name.Append(localName);
-
-            return name.ToString();
-        }*/
 
         private void PushStack()
         {
